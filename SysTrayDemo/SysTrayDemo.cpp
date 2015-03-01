@@ -2,8 +2,6 @@
 #include "stdafx.h"
 #include "SysTrayDemo.h"
 
-//Code sample from http://www.codeproject.com/Articles/18783/Example-of-a-SysTray-App-in-Win
-
 #define MAX_LOADSTRING 100
 #define	WM_USER_SHELLICON WM_USER + 1
 
@@ -13,40 +11,127 @@ HMENU hPopMenu;
 TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szWindowClass[MAX_LOADSTRING];
 TCHAR szApplicationToolTip[MAX_LOADSTRING];
-BOOL bDisable = FALSE;
 
+HWND hMainWnd = NULL;
+BOOL bHidden = FALSE;
 
-VOID ActivateMenu(HWND hWnd)
+LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
+                                 UINT message,
+                                 WPARAM wParam,
+                                 LPARAM lParam)
 {
-    UINT uFlag = MF_BYPOSITION | MF_STRING;
+    PAINTSTRUCT ps;
+    static BOOL bFirstCreation = TRUE;
+    switch (message) {
+    case WM_CREATE:
+        InitMainWindow(bFirstCreation);
+        bFirstCreation = FALSE;
+        break;
+
+    case WM_KILLFOCUS:
+        DestroyWindow(hMainWnd);
+        hMainWnd = NULL;
+        OnClose();
+        break;
+    
+    case WM_PAINT:
+        DrawMainWindow(hWnd, BeginPaint(hWnd, &ps));
+        EndPaint(hWnd, &ps);
+        break;
+
+    }
+
+    if (MainWindow_WndProc(hWnd, message, wParam, lParam))
+        return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+RECT GetMonitorRect()
+{
+    POINT ClickPoint;
+    GetCursorPos(&ClickPoint);
+    HMONITOR hmon = MonitorFromPoint(
+        ClickPoint, MONITOR_DEFAULTTONEAREST);
+    
+    MONITORINFOEX moninfo;
+    moninfo.cbSize = sizeof(MONITORINFOEX);
+    if (GetMonitorInfo(hmon, &moninfo) == 0) {
+        MessageBox(NULL,
+            _T("GetMonitorInfo failed."), _T("Error"), MB_OK);
+        return { 0, 0, 0, 0 };
+    }
+    
+    return moninfo.rcWork;
+}
+
+VOID ActivateWindow(HWND hWnd)
+{ 
+    const int height = 300;
+    const int width = 500;
+
+    RECT rcwork = GetMonitorRect();
+    rcwork.top = rcwork.bottom - height;
+    rcwork.left= rcwork.right - width;
+    rcwork.top -= 5;
+    rcwork.left-= 5;
+    rcwork.right -= 5;
+    rcwork.bottom -= 5;
+
+
+    if (hMainWnd != NULL) {
+        ShowWindow(hMainWnd, SW_HIDE);
+        return;
+    }
+
+    if (hMainWnd == NULL) {
+
+        LPCWSTR wndclass = TEXT("MainMenuWndClass");
+        WNDCLASSEX wcex;
+        ZeroMemory(&wcex, sizeof(WNDCLASSEX));
+        wcex.cbSize = sizeof(WNDCLASSEX);
+        wcex.style = NULL;
+        wcex.lpfnWndProc = MainMenuWndProc;
+        wcex.cbClsExtra = 0;
+        wcex.cbWndExtra = 0;
+        wcex.hInstance = hInst;
+        wcex.hIcon = NULL;
+        wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+        wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+        wcex.lpszMenuName = NULL;
+        wcex.lpszClassName = wndclass;
+        wcex.hIconSm = NULL;
+        RegisterClassEx(&wcex);
+
+        hMainWnd = CreateWindow(
+            wndclass, NULL,
+            WS_POPUP,
+            rcwork.left,
+            rcwork.top,
+            rcwork.right - rcwork.left,
+            rcwork.bottom - rcwork.top,
+            hWnd, NULL, hInst, NULL);
+    }
+
+    ShowWindow(hMainWnd, SW_SHOW);
+    SetActiveWindow(hMainWnd);
+    SetWindowPos(hMainWnd, HWND_TOPMOST, 0,0,0,0,
+        SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE);
+    
+}
+
+VOID ActivatePopupMenu(HWND hWnd)
+{
 
     POINT lpClickPoint;
     GetCursorPos(&lpClickPoint);
     hPopMenu = CreatePopupMenu();
-
-    if (bDisable == TRUE)
-    {
-        uFlag |= MF_GRAYED;
-    }
-    InsertMenu(hPopMenu, 0xFFFFFFFF, uFlag, IDM_TEST2, _T("Test 2")); // Test 2
-    InsertMenu(hPopMenu, 0xFFFFFFFF, uFlag, IDM_TEST1, _T("Test 1")); // Test 1				
-    InsertMenu(hPopMenu, 0xFFFFFFFF, MF_SEPARATOR, IDM_SEP, _T("SEP"));
-    if (bDisable == TRUE)
-    {
-        InsertMenu(hPopMenu, 0xFFFFFFFF, MF_BYPOSITION | MF_STRING, IDM_ENABLE, _T("Enable"));
-    }
-    else
-    {
-        InsertMenu(hPopMenu, 0xFFFFFFFF, MF_BYPOSITION | MF_STRING, IDM_DISABLE, _T("Disable"));
-    }
-    InsertMenu(hPopMenu, 0xFFFFFFFF, MF_SEPARATOR, IDM_SEP, _T("SEP"));
-    InsertMenu(hPopMenu, 0xFFFFFFFF, MF_BYPOSITION | MF_STRING, IDM_EXIT, _T("Exit"));
+    InsertMenu(hPopMenu, 0xFFFFFFFF, 
+        MF_BYPOSITION | MF_STRING, IDM_EXIT, _T("Exit"));
 
     SetForegroundWindow(hWnd);
-    TrackPopupMenu(hPopMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
-
+    TrackPopupMenu(hPopMenu, 
+        TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, 
+        lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
 }
-
 
 LRESULT CALLBACK MenuWndProc(HWND hWnd,
                              UINT message,
@@ -58,18 +143,6 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd,
 
     switch (wmId)
     {
-    case IDM_TEST1:
-        MessageBox(NULL, _T("This is a test for menu Test 1"), _T("Test 1"), MB_OK);
-        break;
-    case IDM_TEST2:
-        MessageBox(NULL, _T("This is a test for menu Test 2"), _T("Test 2"), MB_OK);
-        break;
-    case IDM_DISABLE:
-        bDisable = TRUE;
-        break;
-    case IDM_ENABLE:
-        bDisable = FALSE;
-        break;
     case IDM_EXIT:
         Shell_NotifyIcon(NIM_DELETE, &nidApp);
         DestroyWindow(hWnd);
@@ -77,11 +150,6 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd,
     }
 
     return DefWindowProc(hWnd, message, wParam, lParam);
-}
-
-VOID Paint(HDC hdc, HWND hWnd)
-{
-
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, 
@@ -92,29 +160,22 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 	switch (message) {
 
 	case WM_USER_SHELLICON: 
-		switch(LOWORD(lParam))  {   
-			case WM_RBUTTONDOWN: 
-			case WM_LBUTTONDOWN:
-                ActivateMenu(hWnd);
-				return TRUE;
+        switch (LOWORD(lParam))  {
+        case WM_LBUTTONDOWN:
+            ActivateWindow(hWnd);
+            return TRUE;
+		case WM_RBUTTONDOWN: 
+            ActivatePopupMenu(hWnd);
+			return TRUE;
 		}
 		break;
 
 	case WM_COMMAND:
         return MenuWndProc(hWnd, message, wParam, lParam);
 
-	case WM_PAINT:
-    {
-        PAINTSTRUCT ps;
-        Paint(BeginPaint(hWnd, &ps), hWnd);
-		EndPaint(hWnd, &ps);
-		break;
-    }
-
     case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
-
 	}
 
     return DefWindowProc(hWnd, message, wParam, lParam);
@@ -123,7 +184,6 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance;
-
     WNDCLASSEX wcex;
     wcex.cbSize = sizeof(WNDCLASSEX);
 
@@ -137,7 +197,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszMenuName = MAKEINTRESOURCE(IDC_SYSTRAYDEMO);
     wcex.lpszClassName = szWindowClass;
-    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.hIconSm = NULL;
 
     RegisterClassEx(&wcex);
 

@@ -30,8 +30,7 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_SYSTRAYDEMO         ICON                    "SysTrayDemo.ico"
-IDI_SMALL               ICON                    "small.ico"
+IDI_SYSTRAYDEMO         ICON                    "duck-icon.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
