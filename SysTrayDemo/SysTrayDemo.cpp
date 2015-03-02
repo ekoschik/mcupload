@@ -38,6 +38,9 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         EndPaint(hWnd, &ps);
         break;
 
+    case WM_DESTROY:
+        break;
+
     }
 
     if (MainMenu_HandleWindowMessages(hWnd, message, wParam, lParam)) {
@@ -169,6 +172,8 @@ LRESULT CALLBACK WndProc(HWND hWnd,
         break;
 
     case WM_DESTROY:
+        StopWatchingDirectory();
+        
 		PostQuitMessage(0);
 		break;
 	}
@@ -241,6 +246,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         MAKEINTRESOURCE(IDC_SYSTRAYDEMO));
 
     InitializeMainWindow(hInstance);
+
+    StartWatchingDirectory();
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {

@@ -2,6 +2,9 @@
 
 #include "resource.h"
 
+#include "Shlobj.h"
+#include "Shlwapi.h"
+#include "Windowsx.h"
 //Code sample from http://www.codeproject.com/Articles/18783/Example-of-a-SysTray-App-in-Win
 
 
@@ -15,6 +18,12 @@ BOOL MainMenu_HandleWindowMessages(
     UINT message,
     WPARAM wParam,
     LPARAM lParam);
+
+//watch.cpp
+BOOL StartWatchingDirectory();
+BOOL StopWatchingDirectory();
+LPCWSTR GetWatchedDirectory();
+
 
 
 

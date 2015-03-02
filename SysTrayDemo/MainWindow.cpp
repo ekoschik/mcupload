@@ -1,9 +1,6 @@
 
 #include "stdafx.h"
 #include "SysTrayDemo.h"
-#include "Shlobj.h"
-#include "Shlwapi.h"
-#include "Windowsx.h"
 
 extern HINSTANCE hInst;
 #define IDD_EMAIL    100101
@@ -22,28 +19,6 @@ RECT    rcEdit;
 RECT rcText;
 RECT rcX;
 RECT rcScreemshotDir;
-
-WCHAR ScreenshotDirPath[MAX_PATH];
-
-
-BOOL GetScreenshotsDirectoryPath()
-{
-    if (FAILED(SHGetFolderPath(NULL,
-        CSIDL_APPDATA | CSIDL_FLAG_CREATE,
-        NULL, 0, ScreenshotDirPath))) {
-
-        //couldn't get root path
-        MessageBox(NULL,
-            _T("SHGetFolderPath failed."),
-            _T("Error"), MB_OK);
-        return FALSE;
-    }
-    PathAppend(ScreenshotDirPath, TEXT("\\.minecraft\\screenshots"));
-    
-
-    return TRUE;
-}
-
 
 
 //
@@ -206,7 +181,7 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
         swprintf((LPWSTR)&StrBuf, TEXT("email: %s"), Email);
         DrawText(hdc, (LPWSTR)&StrBuf, wcslen(StrBuf), &rcText, DT_TOP | DT_LEFT);
 
-        //Draw [changed] area
+        //Draw [change] area
         int x = rcText.left + 20;
         int y = rcText.top + 20;
         SetRect(&rcX, x, y, x + 63, y + 23);
@@ -216,16 +191,16 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 
         //Draw Screenshots Directory
         SetRect(&rcScreemshotDir, rcText.left,
-            y + 40, rcText.left + wcslen(ScreenshotDirPath) * 10, y + 60);
-        DrawText(hdc, (LPWSTR)&ScreenshotDirPath, 
-            wcslen(ScreenshotDirPath), &rcScreemshotDir, DT_TOP | DT_LEFT);
+            y + 40, rcText.left + wcslen(GetWatchedDirectory()) * 10, y + 60);
+        DrawText(hdc, GetWatchedDirectory(),
+            wcslen(GetWatchedDirectory()), &rcScreemshotDir, DT_TOP | DT_LEFT);
 
 
     }
     else {
 
         //Draw Text
-        LPWSTR str = TEXT("We need your email:");
+        LPWSTR str = TEXT("We need your email: (enter to save)");
         DrawText(hdc, str, wcslen(str), &rcText, DT_TOP | DT_LEFT);
 
         //Show email entry dialog box
@@ -260,6 +235,12 @@ BOOL MainMenu_HandleWindowMessages(
         }
         break;
     }
+
+    case WM_KEYDOWN:
+        if (wParam == VK_ESCAPE) {
+            DestroyWindow(hWnd);
+        }
+
     }
 
     return TRUE;
@@ -281,11 +262,13 @@ VOID OpenMainWindow(HWND hWnd)
             _T("Creating Edit Control failed."),
             _T("Error"), MB_OK);
     }
+
+
 }
 
 VOID CloseMainWindow()
 {
-
+    
 }
 
 
@@ -306,7 +289,6 @@ BOOL InitializeMainWindow(HINSTANCE hInst)
         return FALSE;
     }
 
-    GetScreenshotsDirectoryPath();
 
     //Initialize layout rects
     SetRect(&rcText, 50, 50, 500, 70);
