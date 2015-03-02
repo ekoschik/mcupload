@@ -10,6 +10,11 @@ BOOL InitializeMainWindow(HINSTANCE hInst);
 VOID OpenMainWindow(HWND hwnd);
 VOID CloseMainWindow();
 VOID DrawMainWindow(HWND hwnd, HDC hdc);
+BOOL MainMenu_HandleWindowMessages(
+    HWND hWnd,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam);
 
 
 

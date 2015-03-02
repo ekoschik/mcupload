@@ -40,7 +40,9 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
 
     }
 
-    return DefWindowProc(hWnd, message, wParam, lParam);
+    if (MainMenu_HandleWindowMessages(hWnd, message, wParam, lParam)) {
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
 }
 
 RECT GetMonitorRect()

@@ -3,6 +3,7 @@
 #include "SysTrayDemo.h"
 #include "Shlobj.h"
 #include "Shlwapi.h"
+#include "Windowsx.h"
 
 extern HINSTANCE hInst;
 #define IDD_EMAIL    100101
@@ -19,6 +20,29 @@ BOOL    bEmailSet;
 RECT    rcEdit;
 
 RECT rcText;
+RECT rcX;
+RECT rcScreemshotDir;
+
+WCHAR ScreenshotDirPath[MAX_PATH];
+
+
+BOOL GetScreenshotsDirectoryPath()
+{
+    if (FAILED(SHGetFolderPath(NULL,
+        CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+        NULL, 0, ScreenshotDirPath))) {
+
+        //couldn't get root path
+        MessageBox(NULL,
+            _T("SHGetFolderPath failed."),
+            _T("Error"), MB_OK);
+        return FALSE;
+    }
+    PathAppend(ScreenshotDirPath, TEXT("\\.minecraft\\screenshots"));
+    
+
+    return TRUE;
+}
 
 
 
@@ -48,7 +72,7 @@ BOOL InitDataFile()
 {
     //Initialize MCuploader Directory
     if (FAILED(SHGetFolderPath(NULL,
-        CSIDL_PERSONAL | CSIDL_FLAG_CREATE,
+        CSIDL_APPDATA | CSIDL_FLAG_CREATE,
         NULL, 0, IniFilePath))) {
 
         //couldn't get root path
@@ -128,7 +152,7 @@ INT_PTR CALLBACK EmailEditControlWndProc(
     return OldEditWndProc(hwndDlg, uMsg, wParam, lParam);
 }
 
-BOOL SetupEmailEditControl(HWND hWnd)
+BOOL SetupEditControl(HWND hWnd)
 {
     //Create edit control
     hEmailEditControl = CreateWindow(TEXT("edit"), NULL,
@@ -146,7 +170,7 @@ BOOL SetupEmailEditControl(HWND hWnd)
         rcEdit.bottom - rcEdit.top,
         SWP_SHOWWINDOW);
     
-    //Subclass edit control
+    //Subclass edit control to commit on enter/tab
     OldEditWndProc = 
         (WNDPROC)SetWindowLongPtr(hEmailEditControl, 
             GWLP_WNDPROC, (LONG_PTR)EmailEditControlWndProc);
@@ -164,9 +188,9 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
     SetBkMode(hdc, TRANSPARENT);
     SelectObject(hdc, hFont);
 
+    //Hide the edit control by default
     ShowWindow(hEmailEditControl, SW_HIDE);
 
-    GetEmail();
 
     //Draw background
     RECT rcClient;
@@ -176,12 +200,25 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 
     if (bEmailSet) {
 
-        //Draw Text
+        //Draw Email Value
         WCHAR StrBuf[MAX_PATH];
         ZeroMemory(&StrBuf, sizeof(StrBuf));
         swprintf((LPWSTR)&StrBuf, TEXT("email: %s"), Email);
         DrawText(hdc, (LPWSTR)&StrBuf, wcslen(StrBuf), &rcText, DT_TOP | DT_LEFT);
 
+        //Draw [changed] area
+        int x = rcText.left + 20;
+        int y = rcText.top + 20;
+        SetRect(&rcX, x, y, x + 63, y + 23);
+        ZeroMemory(&StrBuf, sizeof(StrBuf));
+        swprintf((LPWSTR)&StrBuf, TEXT("[change]"));
+        DrawText(hdc, (LPWSTR)&StrBuf, wcslen(StrBuf), &rcX, DT_TOP | DT_LEFT);
+
+        //Draw Screenshots Directory
+        SetRect(&rcScreemshotDir, rcText.left,
+            y + 40, rcText.left + wcslen(ScreenshotDirPath) * 10, y + 60);
+        DrawText(hdc, (LPWSTR)&ScreenshotDirPath, 
+            wcslen(ScreenshotDirPath), &rcScreemshotDir, DT_TOP | DT_LEFT);
 
 
     }
@@ -199,8 +236,35 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
             rcEdit.bottom - rcEdit.top,
             SWP_SHOWWINDOW);
 
+        SetFocus(hEmailEditControl);
+
     }
 }
+
+
+BOOL MainMenu_HandleWindowMessages(
+    HWND hWnd,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    switch (message) {
+    
+    case WM_LBUTTONDOWN:
+    {
+        //clicking on the [change] invalidates the email address
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        if (PtInRect(&rcX, pt)) {
+            bEmailSet = FALSE;
+            InvalidateRect(hwndMain, NULL, TRUE);
+        }
+        break;
+    }
+    }
+
+    return TRUE;
+}
+
 
 
 //
@@ -210,7 +274,9 @@ VOID OpenMainWindow(HWND hWnd)
 {
     hwndMain = hWnd;
 
-    if (!SetupEmailEditControl(hWnd)){
+    GetEmail();
+
+    if (!SetupEditControl(hWnd)){
         MessageBox(NULL,
             _T("Creating Edit Control failed."),
             _T("Error"), MB_OK);
@@ -239,6 +305,8 @@ BOOL InitializeMainWindow(HINSTANCE hInst)
     if (!InitDataFile()) {
         return FALSE;
     }
+
+    GetScreenshotsDirectoryPath();
 
     //Initialize layout rects
     SetRect(&rcText, 50, 50, 500, 70);
