@@ -24,14 +24,13 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
     static BOOL bFirstCreation = TRUE;
     switch (message) {
     case WM_CREATE:
-        InitMainWindow(bFirstCreation);
-        bFirstCreation = FALSE;
+        OpenMainWindow(hWnd);
         break;
 
     case WM_KILLFOCUS:
-        DestroyWindow(hMainWnd);
-        hMainWnd = NULL;
-        OnClose();
+        //DestroyWindow(hMainWnd);
+        //hMainWnd = NULL;
+        //OnClose();
         break;
     
     case WM_PAINT:
@@ -41,8 +40,7 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
 
     }
 
-    if (MainWindow_WndProc(hWnd, message, wParam, lParam))
-        return DefWindowProc(hWnd, message, wParam, lParam);
+    return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 RECT GetMonitorRect()
@@ -68,49 +66,46 @@ VOID ActivateWindow(HWND hWnd)
     const int height = 300;
     const int width = 500;
 
-    RECT rcwork = GetMonitorRect();
-    rcwork.top = rcwork.bottom - height;
-    rcwork.left= rcwork.right - width;
-    rcwork.top -= 5;
-    rcwork.left-= 5;
-    rcwork.right -= 5;
-    rcwork.bottom -= 5;
-
-
     if (hMainWnd != NULL) {
-        ShowWindow(hMainWnd, SW_HIDE);
+        DestroyWindow(hMainWnd);
+        hMainWnd = NULL;
         return;
     }
 
-    if (hMainWnd == NULL) {
+    LPCWSTR wndclass = TEXT("MainMenuWndClass");
+    WNDCLASSEX wcex;
+    ZeroMemory(&wcex, sizeof(WNDCLASSEX));
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.style = NULL;
+    wcex.lpfnWndProc = MainMenuWndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInst;
+    wcex.hIcon = NULL;
+    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = NULL;
+    wcex.lpszClassName = wndclass;
+    wcex.hIconSm = NULL;
+    RegisterClassEx(&wcex);
 
-        LPCWSTR wndclass = TEXT("MainMenuWndClass");
-        WNDCLASSEX wcex;
-        ZeroMemory(&wcex, sizeof(WNDCLASSEX));
-        wcex.cbSize = sizeof(WNDCLASSEX);
-        wcex.style = NULL;
-        wcex.lpfnWndProc = MainMenuWndProc;
-        wcex.cbClsExtra = 0;
-        wcex.cbWndExtra = 0;
-        wcex.hInstance = hInst;
-        wcex.hIcon = NULL;
-        wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-        wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-        wcex.lpszMenuName = NULL;
-        wcex.lpszClassName = wndclass;
-        wcex.hIconSm = NULL;
-        RegisterClassEx(&wcex);
+    RECT rcwork = GetMonitorRect();
+    rcwork.top = rcwork.bottom - height;
+    rcwork.left = rcwork.right - width;
+    rcwork.top -= 5;
+    rcwork.left -= 5;
+    rcwork.right -= 5;
+    rcwork.bottom -= 5;
 
-        hMainWnd = CreateWindow(
-            wndclass, NULL,
-            WS_POPUP,
-            rcwork.left,
-            rcwork.top,
-            rcwork.right - rcwork.left,
-            rcwork.bottom - rcwork.top,
-            hWnd, NULL, hInst, NULL);
-    }
-
+    hMainWnd = CreateWindow(
+        wndclass, NULL,
+        WS_POPUP,
+        rcwork.left,
+        rcwork.top,
+        rcwork.right - rcwork.left,
+        rcwork.bottom - rcwork.top,
+        hWnd, NULL, hInst, NULL);
+    
     ShowWindow(hMainWnd, SW_SHOW);
     SetActiveWindow(hMainWnd);
     SetWindowPos(hMainWnd, HWND_TOPMOST, 0,0,0,0,
@@ -124,6 +119,8 @@ VOID ActivatePopupMenu(HWND hWnd)
     POINT lpClickPoint;
     GetCursorPos(&lpClickPoint);
     hPopMenu = CreatePopupMenu();
+
+    //Exit
     InsertMenu(hPopMenu, 0xFFFFFFFF, 
         MF_BYPOSITION | MF_STRING, IDM_EXIT, _T("Exit"));
 
@@ -133,23 +130,18 @@ VOID ActivatePopupMenu(HWND hWnd)
         lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
 }
 
-LRESULT CALLBACK MenuWndProc(HWND hWnd,
+//Handle Popup Menu Related Window Messages
+VOID MenuWndProc(HWND hWnd,
                              UINT message,
                              WPARAM wParam,
                              LPARAM lParam)
 {
-    int wmId = LOWORD(wParam);
-    int wmEvent = HIWORD(wParam);
-
-    switch (wmId)
-    {
+    switch (LOWORD(wParam)) {
     case IDM_EXIT:
         Shell_NotifyIcon(NIM_DELETE, &nidApp);
         DestroyWindow(hWnd);
         break;
     }
-
-    return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, 
@@ -171,7 +163,8 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 		break;
 
 	case WM_COMMAND:
-        return MenuWndProc(hWnd, message, wParam, lParam);
+        MenuWndProc(hWnd, message, wParam, lParam);
+        break;
 
     case WM_DESTROY:
 		PostQuitMessage(0);
@@ -244,6 +237,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     HACCEL hAccelTable = LoadAccelerators(hInstance,
         MAKEINTRESOURCE(IDC_SYSTRAYDEMO));
+
+    InitializeMainWindow(hInstance);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
