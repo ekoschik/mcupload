@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "SysTrayDemo.h"
 
-extern HINSTANCE hInst;
 #define IDD_EMAIL    100101
 
 HWND hwndMain;
@@ -10,6 +9,7 @@ HBRUSH hbackground;
 HFONT hFont;
 
 WCHAR IniFilePath[MAX_PATH];
+WCHAR ApplicationDirectoryPath[MAX_PATH];
 
 HWND    hEmailEditControl;
 WCHAR   Email[MAX_PATH];
@@ -19,29 +19,6 @@ RECT    rcEdit;
 RECT rcText;
 RECT rcX;
 RECT rcScreemshotDir;
-
-
-//
-// Writing to and reading from data.ini
-//
-__inline BOOL SetKey(LPCWSTR key, LPCWSTR val)
-{
-    return WritePrivateProfileString(
-        TEXT("MCuploader"), key, val, IniFilePath);
-}
-
-__inline BOOL GetKey(LPCWSTR key, LPWSTR out)
-{
-    ZeroMemory(out, MAX_PATH);
-
-    int ret = GetPrivateProfileString(
-        TEXT("MCuploader"), key, 
-        TEXT(""), //default value 
-        out, MAX_PATH,
-        IniFilePath);
-
-    return ret > 0;
-}
 
 BOOL InitDataFile()
 {
@@ -56,7 +33,10 @@ BOOL InitDataFile()
             _T("Error"), MB_OK);
         return FALSE;
     }
+
+    //Save App Directory Path
     PathAppend(IniFilePath, TEXT("\\MCuploader"));
+    wcscpy((LPWSTR)&ApplicationDirectoryPath, IniFilePath);    
 
     //Ensure directory
     if (CreateDirectory(IniFilePath, NULL) != 0 &&
@@ -75,16 +55,39 @@ BOOL InitDataFile()
 
 
 //
+// Writing to and reading from data.ini
+//
+__inline BOOL SetKey(LPCWSTR key, LPCWSTR val)
+{
+    return WritePrivateProfileString(
+        TEXT("MCuploader"), key, val, IniFilePath);
+}
+
+__inline BOOL GetKey(LPCWSTR key, LPWSTR out)
+{
+    ZeroMemory(out, MAX_PATH);
+
+    int ret = GetPrivateProfileString(
+        TEXT("MCuploader"), key,
+        TEXT(""), //default value 
+        out, MAX_PATH,
+        IniFilePath);
+
+    return ret > 0;
+}
+
+
+//
 // Get and Set the text from the email edit control
 //  and save in Email
 //
 BOOL GetEmail()
 {
-    ZeroMemory(&Email, MAX_PATH);
-    bEmailSet = GetKey(TEXT("email"), (LPWSTR)&Email);
-    if (!bEmailSet) {
-        //no data file exists
-        wcscpy((LPWSTR)&Email, TEXT(""));
+    WCHAR email[MAX_PATH];
+    ZeroMemory(&email, MAX_PATH);
+    bEmailSet = GetKey(TEXT("email"), (LPWSTR)&email);
+    if (bEmailSet) {
+        wcscpy((LPWSTR)&Email, email);
     }
     return bEmailSet;
 }
@@ -92,10 +95,9 @@ BOOL GetEmail()
 VOID SetEmail(LPWSTR email)
 {
     bEmailSet = SetKey(TEXT("email"), email);
-    if (!bEmailSet) {
-        return;
+    if (bEmailSet) {
+        wcscpy((LPWSTR)&Email, email);
     }
-    wcscpy((LPWSTR)&Email, email);
 }
 
 
@@ -191,9 +193,12 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 
         //Draw Screenshots Directory
         SetRect(&rcScreemshotDir, rcText.left,
-            y + 40, rcText.left + wcslen(GetWatchedDirectory()) * 10, y + 60);
-        DrawText(hdc, GetWatchedDirectory(),
-            wcslen(GetWatchedDirectory()), &rcScreemshotDir, DT_TOP | DT_LEFT);
+            y + 40, rcText.left + wcslen(ScreenshotDirPath) * 10, y + 60);
+        DrawText(hdc, ScreenshotDirPath,
+            wcslen(ScreenshotDirPath), &rcScreemshotDir, DT_TOP | DT_LEFT);
+
+
+
 
 
     }
@@ -234,6 +239,7 @@ BOOL MainMenu_HandleWindowMessages(
             InvalidateRect(hwndMain, NULL, TRUE);
         }
         break;
+
     }
 
     case WM_KEYDOWN:

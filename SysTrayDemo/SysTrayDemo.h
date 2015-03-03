@@ -5,14 +5,15 @@
 #include "Shlobj.h"
 #include "Shlwapi.h"
 #include "Windowsx.h"
-//Code sample from http://www.codeproject.com/Articles/18783/Example-of-a-SysTray-App-in-Win
 
+extern HINSTANCE hInst;
 
 //MainWindow.cpp
 BOOL InitializeMainWindow(HINSTANCE hInst);
 VOID OpenMainWindow(HWND hwnd);
 VOID CloseMainWindow();
 VOID DrawMainWindow(HWND hwnd, HDC hdc);
+extern WCHAR IniFilePath[MAX_PATH];
 BOOL MainMenu_HandleWindowMessages(
     HWND hWnd,
     UINT message,
@@ -23,7 +24,9 @@ BOOL MainMenu_HandleWindowMessages(
 BOOL StartWatchingDirectory();
 BOOL StopWatchingDirectory();
 LPCWSTR GetWatchedDirectory();
+extern WCHAR ScreenshotDirPath[MAX_PATH];
 
-
+//upload.cpp
+VOID UploadFile(LPCWSTR filepath);
 
 

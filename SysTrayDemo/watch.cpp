@@ -2,35 +2,28 @@
 #include "stdafx.h"
 #include "SysTrayDemo.h"
 #include <list>
+#include <fstream>
+#include <vector>
+#include <string>
 
 WCHAR ScreenshotDirPath[MAX_PATH];
-WCHAR LastUploadedFileName[MAX_PATH];
-std::list<LPCWSTR> FilesToUpload;
+WCHAR UploadedDirPath[MAX_PATH];
 
+VOID MarkUploaded(LPCWSTR lastfile);
+BOOL IsInUploadedList(LPCWSTR filename);
 
-VOID MarkFileAsUploaded(LPCWSTR filepath)
+VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 {
+    //Skip files that have already been uploaded
+    if (IsInUploadedList(filename)) {
+        return;
+    }
 
-    //TODO: Remove file from queue and
-    //  update last uploaded file time.
-    //  To be called when upload of a
-    //  file finishes
+    //Upload
+    UploadFile(filepath);
 
-}
-
-VOID CheckFile(LPCWSTR filepath, LPCWSTR filename)
-{
-
-    //TODO: Check against last uploaded file's
-    //  time, and FilesToUpload queue to skip
-    //  file if it has already been uploaded
-
-
-    LPWSTR file = new WCHAR[MAX_PATH];
-    wcscpy(file, filepath);
-    
-    FilesToUpload.push_back(file);
-
+    //Mark as uploaded
+    MarkUploaded(filename);
 }
 
 
@@ -63,22 +56,22 @@ VOID ProcessDirectoryChange()
             continue;
         }
 
-        //Check File
+        //Check file for uploading
         wsprintf(sPath, TEXT("%s\\%s"), ScreenshotDirPath, fdFile.cFileName);
-        CheckFile(sPath, fdFile.cFileName);
+        TestAndUploadFile(sPath, fdFile.cFileName);
 
     } while (FindNextFile(hFind, &fdFile));
 
     FindClose(hFind);
+    return;
 }
 
 
 //
-// Worker Thread for monitoring directory
+// Worker Thread
 //
 DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
 {
-
     DWORD dwWaitStatus;
     HANDLE dwChangeHandle;
 
@@ -102,7 +95,8 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
         switch (dwWaitStatus) {
         case WAIT_OBJECT_0:
 
-            ProcessDirectoryChange();
+            ProcessDirectoryChange(); 
+
             if (FindNextChangeNotification(dwChangeHandle) == FALSE) {
                 MessageBox(NULL,
                     _T("FindNextChangeNotification failed."),
@@ -133,7 +127,71 @@ BOOL GetScreenshotsDirectoryPath()
         return FALSE;
     }
     PathAppend(ScreenshotDirPath, TEXT("\\.minecraft\\screenshots"));
+
+    wcscpy((LPWSTR)&UploadedDirPath, ScreenshotDirPath);
+    PathAppend(UploadedDirPath, TEXT("\\uploaded"));
+
+    CreateDirectory(UploadedDirPath, NULL);
+
     return TRUE;
+}
+
+//
+// Keep a list of uploaded files, and remember between
+//  runs by writing and read to uploaded.txt
+//
+extern WCHAR ApplicationDirectoryPath[MAX_PATH];
+WCHAR UploadedDataFilePath[MAX_PATH];
+std::vector<std::string> UploadedFilesList;
+
+VOID LoadAlreadyUploaded()
+{
+    wcscpy((LPWSTR)&UploadedDataFilePath, ApplicationDirectoryPath);
+    PathAppend(UploadedDataFilePath, TEXT("\\uploaded.txt"));
+
+    std::ifstream hFile(UploadedDataFilePath);
+
+    std::string line;
+    while (std::getline(hFile, line))
+        UploadedFilesList.push_back(line);
+}
+
+std::string ToStr(LPCWSTR in)
+{
+    CHAR buf[MAX_PATH];
+    ZeroMemory(&buf, MAX_PATH);
+    wcstombs((char*)&buf, in, wcslen(in));
+    std::string out = buf;
+    return out;
+}
+
+VOID MarkUploaded(LPCWSTR lastfile)
+{
+    std::string file = ToStr(lastfile);
+    UploadedFilesList.push_back(file);
+
+    std::ofstream hFile(UploadedDataFilePath);
+    CHAR buf[MAX_PATH];
+    for (auto it = UploadedFilesList.begin();
+        it != UploadedFilesList.end(); ++it) {
+
+        ZeroMemory(&buf, MAX_PATH);
+        sprintf((char*)&buf, "%s\n", it->c_str());
+
+        hFile.write(buf, strlen(buf));
+    }    
+}
+
+BOOL IsInUploadedList(LPCWSTR filename)
+{
+    std::string file = ToStr(filename);
+    for (auto it = UploadedFilesList.begin();
+        it != UploadedFilesList.end(); ++it) {
+        if (it->compare(file) == 0) {
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 //
@@ -147,10 +205,11 @@ BOOL StartWatchingDirectory()
 {
     GetScreenshotsDirectoryPath();
 
-    //TODO: Get last uploaded file time
-    //  from the data file
+    LoadAlreadyUploaded();
 
-    hThread = CreateThread(NULL, 0, WatchDirectory, NULL, 0, NULL);
+    hThread = CreateThread(NULL, 0,
+                           WatchDirectory,
+                           NULL, 0, NULL);
 
     if (hThread == NULL) {
         MessageBox(NULL,
@@ -166,9 +225,4 @@ BOOL StopWatchingDirectory()
 {
     TerminateThread(hThread, 0);
     return TRUE;
-}
-
-LPCWSTR GetWatchedDirectory()
-{
-    return (LPCWSTR)& ScreenshotDirPath;
 }
