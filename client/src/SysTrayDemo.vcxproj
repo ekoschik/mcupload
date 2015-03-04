@@ -102,10 +102,6 @@
     <ClInclude Include="MCuploader.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico" />
-    <Image Include="SysTrayDemo.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="MCupload.rc" />
   </ItemGroup>
   <ItemGroup>
