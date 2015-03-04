@@ -12,7 +12,20 @@ TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szWindowClass[MAX_LOADSTRING];
 TCHAR szApplicationToolTip[MAX_LOADSTRING];
 
-HWND hMainWnd = NULL;
+HWND hMainWnd;
+
+VOID Initialize()
+{
+    hMainWnd = NULL;
+
+    InitializeMainWindow();
+
+    InitUpload();
+
+    StartWatchingDirectory();
+
+}
+
 
 LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
                                  UINT message,
@@ -242,9 +255,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     HACCEL hAccelTable = LoadAccelerators(hInstance,
         MAKEINTRESOURCE(IDC_MCUPLOADICON));
 
-    InitializeMainWindow(hInstance);
+    hInst = hInstance;
 
-    StartWatchingDirectory();
+    Initialize();
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {

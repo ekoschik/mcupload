@@ -188,7 +188,7 @@ VOID CloseMainWindow()
 //
 // Single time application setup for Main Window
 //
-BOOL InitializeMainWindow(HINSTANCE hInst)
+BOOL InitializeMainWindow()
 {
     //Initialize resources
     hbackground = CreateSolidBrush(RGB(250, 218, 90));

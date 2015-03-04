@@ -9,7 +9,7 @@
 extern HINSTANCE hInst;
 
 //window.cpp
-BOOL    InitializeMainWindow(HINSTANCE hInst);
+BOOL    InitializeMainWindow();
 VOID    OpenMainWindow(HWND hwnd);
 VOID    CloseMainWindow();
 VOID    DrawMainWindow(HWND hwnd, HDC hdc);
@@ -24,6 +24,7 @@ BOOL    StopWatchingDirectory();
 LPCWSTR GetWatchedDirectory();
 
 //upload.cpp
+VOID    InitUpload();
 VOID    UploadFile(LPCWSTR filepath);
 
 //files.cpp
