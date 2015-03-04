@@ -4,6 +4,7 @@ var express = require('express')
   , bodyParser = require('body-parser')
   , multer = require('multer')
   , path = require('path')
+  , models = require('./models')
   , app = express()
   ;
 
@@ -20,9 +21,20 @@ app.use(multer({ dest: './uploads' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/upload', function(req, res) {
+    console.log(req.body);
+    console.log(req.files);
     console.log('file name:', req.files.file.name);
     console.log('file path:', req.files.file.path);
-    res.sendStatus(204);
+
+    var imageRec = {
+        user: req.body.user,
+        url: req.files.file.path
+    };
+
+    console.log('Adding new image to database:', imageRec);
+    models.Image.create(imageRec).then(function() {
+        res.sendStatus(204);
+    });
 });
 
 app.get('/', function(req, res) {
@@ -51,6 +63,9 @@ app.use(function(err, req, res, next) {
   });
 });
 
-app.listen(PORT, function() {
-    console.log('Listening on port', PORT);
+// sync the database and then start the server
+models.sequelize.sync().then(function() {
+    app.listen(PORT, function() {
+        console.log('Listening on port', PORT);
+    });
 });
