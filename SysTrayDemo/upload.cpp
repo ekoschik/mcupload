@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "SysTrayDemo.h"
+#include "MCuploader.h"
 
 VOID UploadFile(LPCWSTR filepath)
 {

@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "SysTrayDemo.h"
+#include "MCuploader.h"
 
 #define IDD_EMAIL    100101
 
@@ -8,97 +8,14 @@ HWND hwndMain;
 HBRUSH hbackground;
 HFONT hFont;
 
-WCHAR IniFilePath[MAX_PATH];
-WCHAR ApplicationDirectoryPath[MAX_PATH];
 
 HWND    hEmailEditControl;
-WCHAR   Email[MAX_PATH];
-BOOL    bEmailSet;
 RECT    rcEdit;
 
 RECT rcText;
 RECT rcX;
 RECT rcScreemshotDir;
 
-BOOL InitDataFile()
-{
-    //Initialize MCuploader Directory
-    if (FAILED(SHGetFolderPath(NULL,
-        CSIDL_APPDATA | CSIDL_FLAG_CREATE,
-        NULL, 0, IniFilePath))) {
-
-        //couldn't get root path
-        MessageBox(NULL,
-            _T("SHGetFolderPath failed."),
-            _T("Error"), MB_OK);
-        return FALSE;
-    }
-
-    //Save App Directory Path
-    PathAppend(IniFilePath, TEXT("\\MCuploader"));
-    wcscpy((LPWSTR)&ApplicationDirectoryPath, IniFilePath);    
-
-    //Ensure directory
-    if (CreateDirectory(IniFilePath, NULL) != 0 &&
-        GetLastError() != ERROR_ALREADY_EXISTS) {
-
-        //couldn't ensure directory existence
-        MessageBox(NULL,
-            _T("CreateDirectory failed."),
-            _T("Error"), MB_OK);
-        return FALSE;
-    }
-
-    //Initialize IniFilePath
-    PathAppend(IniFilePath, TEXT("\\data.ini"));
-}
-
-
-//
-// Writing to and reading from data.ini
-//
-__inline BOOL SetKey(LPCWSTR key, LPCWSTR val)
-{
-    return WritePrivateProfileString(
-        TEXT("MCuploader"), key, val, IniFilePath);
-}
-
-__inline BOOL GetKey(LPCWSTR key, LPWSTR out)
-{
-    ZeroMemory(out, MAX_PATH);
-
-    int ret = GetPrivateProfileString(
-        TEXT("MCuploader"), key,
-        TEXT(""), //default value 
-        out, MAX_PATH,
-        IniFilePath);
-
-    return ret > 0;
-}
-
-
-//
-// Get and Set the text from the email edit control
-//  and save in Email
-//
-BOOL GetEmail()
-{
-    WCHAR email[MAX_PATH];
-    ZeroMemory(&email, MAX_PATH);
-    bEmailSet = GetKey(TEXT("email"), (LPWSTR)&email);
-    if (bEmailSet) {
-        wcscpy((LPWSTR)&Email, email);
-    }
-    return bEmailSet;
-}
-
-VOID SetEmail(LPWSTR email)
-{
-    bEmailSet = SetKey(TEXT("email"), email);
-    if (bEmailSet) {
-        wcscpy((LPWSTR)&Email, email);
-    }
-}
 
 
 //
@@ -168,7 +85,6 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
     //Hide the edit control by default
     ShowWindow(hEmailEditControl, SW_HIDE);
 
-
     //Draw background
     RECT rcClient;
     GetClientRect(hWnd, &rcClient);
@@ -196,10 +112,6 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
             y + 40, rcText.left + wcslen(ScreenshotDirPath) * 10, y + 60);
         DrawText(hdc, ScreenshotDirPath,
             wcslen(ScreenshotDirPath), &rcScreemshotDir, DT_TOP | DT_LEFT);
-
-
-
-
 
     }
     else {
@@ -246,16 +158,13 @@ BOOL MainMenu_HandleWindowMessages(
         if (wParam == VK_ESCAPE) {
             DestroyWindow(hWnd);
         }
-
     }
-
     return TRUE;
 }
 
 
-
 //
-// On Opening and Closing the Main Window
+// Opening and Closing the Main Window
 //
 VOID OpenMainWindow(HWND hWnd)
 {
@@ -268,8 +177,6 @@ VOID OpenMainWindow(HWND hWnd)
             _T("Creating Edit Control failed."),
             _T("Error"), MB_OK);
     }
-
-
 }
 
 VOID CloseMainWindow()

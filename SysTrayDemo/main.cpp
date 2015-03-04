@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "SysTrayDemo.h"
+#include "MCuploader.h"
 
 #define MAX_LOADSTRING 100
 #define	WM_USER_SHELLICON WM_USER + 1
@@ -13,7 +13,6 @@ TCHAR szWindowClass[MAX_LOADSTRING];
 TCHAR szApplicationToolTip[MAX_LOADSTRING];
 
 HWND hMainWnd = NULL;
-BOOL bHidden = FALSE;
 
 LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
                                  UINT message,
@@ -27,12 +26,8 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         OpenMainWindow(hWnd);
         break;
 
-    case WM_KILLFOCUS:
-        //DestroyWindow(hMainWnd);
-        //hMainWnd = NULL;
-        //OnClose();
-        break;
-    
+    //TODO: catch when losing focus and close
+
     case WM_PAINT:
         DrawMainWindow(hWnd, BeginPaint(hWnd, &ps));
         EndPaint(hWnd, &ps);
@@ -46,6 +41,8 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
     if (MainMenu_HandleWindowMessages(hWnd, message, wParam, lParam)) {
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
+
+    return 0;
 }
 
 RECT GetMonitorRect()
@@ -192,10 +189,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SYSTRAYDEMO));
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MCUPLOADICON));
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = MAKEINTRESOURCE(IDC_SYSTRAYDEMO);
+    wcex.lpszMenuName = NULL;
     wcex.lpszClassName = szWindowClass;
     wcex.hIconSm = NULL;
 
@@ -212,9 +209,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     nidApp.cbSize = sizeof(NOTIFYICONDATA);
     nidApp.hWnd = hWnd;
     nidApp.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-    nidApp.uID = IDI_SYSTRAYDEMO;
+    nidApp.uID = IDI_MCUPLOADICON;
     nidApp.hIcon = LoadIcon(hInstance, 
-        (LPCTSTR)MAKEINTRESOURCE(IDI_SYSTRAYDEMO));
+        (LPCTSTR)MAKEINTRESOURCE(IDI_MCUPLOADICON));
     nidApp.uCallbackMessage = WM_USER_SHELLICON;
     
     LoadString(hInstance, IDS_APPTOOLTIP, nidApp.szTip, MAX_LOADSTRING);
@@ -236,14 +233,14 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     LoadString(hInstance,
         IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadString(hInstance,
-        IDC_SYSTRAYDEMO, szWindowClass, MAX_LOADSTRING);
+        IDC_MCUPLOADICON, szWindowClass, MAX_LOADSTRING);
 
     if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
     }
 
     HACCEL hAccelTable = LoadAccelerators(hInstance,
-        MAKEINTRESOURCE(IDC_SYSTRAYDEMO));
+        MAKEINTRESOURCE(IDC_MCUPLOADICON));
 
     InitializeMainWindow(hInstance);
 

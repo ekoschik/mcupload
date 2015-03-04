@@ -9,9 +9,9 @@
 #define IDM_ABOUT                       104
 #define IDS_APPTOOLTIP                  104
 #define IDM_EXIT                        105
-#define IDI_SYSTRAYDEMO                 107
+#define IDI_MCUPLOADICON                107
 #define IDI_SMALL                       108
-#define IDC_SYSTRAYDEMO                 109
+#define IDC_MCUPLOADICON                109
 #define IDR_MAINFRAME                   128
 #define ID_S_                           32771
 #define ID_S_EXIT                       32772

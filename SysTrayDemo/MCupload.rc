@@ -30,7 +30,7 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_SYSTRAYDEMO         ICON                    "duck-icon.ico"
+IDI_MCUPLOADICON         ICON                    "duck-icon.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -104,7 +104,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Minecraft Screenshot Uploader"
     IDS_APPTOOLTIP          "MC Uploader"
-    IDC_SYSTRAYDEMO         "MCuploader"
+    IDC_MCUPLOADICON         "MCuploader"
 END
 
 #endif    // Hebrew resources

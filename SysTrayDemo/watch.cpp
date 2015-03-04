@@ -1,13 +1,10 @@
 
 #include "stdafx.h"
-#include "SysTrayDemo.h"
+#include "MCuploader.h"
 #include <list>
 #include <fstream>
 #include <vector>
 #include <string>
-
-WCHAR ScreenshotDirPath[MAX_PATH];
-WCHAR UploadedDirPath[MAX_PATH];
 
 VOID MarkUploaded(LPCWSTR lastfile);
 BOOL IsInUploadedList(LPCWSTR filename);
@@ -70,6 +67,7 @@ VOID ProcessDirectoryChange()
 //
 // Worker Thread
 //
+
 DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
 {
     DWORD dwWaitStatus;
@@ -87,9 +85,7 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
         return -1;
     }
 
-
     while (TRUE) {
-    
         dwWaitStatus = WaitForSingleObject(dwChangeHandle, INFINITE);
 
         switch (dwWaitStatus) {
@@ -97,50 +93,23 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
 
             ProcessDirectoryChange(); 
 
-            if (FindNextChangeNotification(dwChangeHandle) == FALSE) {
+            if (!FindNextChangeNotification(dwChangeHandle)) {
                 MessageBox(NULL,
                     _T("FindNextChangeNotification failed."),
                     _T("Error"), MB_OK);
             }
-            break;
-
-        default:
             break;
         }
     }
     return 0;
 }
 
-//
-// Getting the \user\.minecraft\screenshots dir path
-//
-BOOL GetScreenshotsDirectoryPath()
-{
-    if (FAILED(SHGetFolderPath(NULL,
-        CSIDL_APPDATA | CSIDL_FLAG_CREATE,
-        NULL, 0, ScreenshotDirPath))) {
-
-        //couldn't get root path
-        MessageBox(NULL,
-            _T("SHGetFolderPath failed."),
-            _T("Error"), MB_OK);
-        return FALSE;
-    }
-    PathAppend(ScreenshotDirPath, TEXT("\\.minecraft\\screenshots"));
-
-    wcscpy((LPWSTR)&UploadedDirPath, ScreenshotDirPath);
-    PathAppend(UploadedDirPath, TEXT("\\uploaded"));
-
-    CreateDirectory(UploadedDirPath, NULL);
-
-    return TRUE;
-}
 
 //
 // Keep a list of uploaded files, and remember between
 //  runs by writing and read to uploaded.txt
 //
-extern WCHAR ApplicationDirectoryPath[MAX_PATH];
+
 WCHAR UploadedDataFilePath[MAX_PATH];
 std::vector<std::string> UploadedFilesList;
 
@@ -193,6 +162,7 @@ BOOL IsInUploadedList(LPCWSTR filename)
     }
     return FALSE;
 }
+
 
 //
 // Start and Stop the worker thread for 

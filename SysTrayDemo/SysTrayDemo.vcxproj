@@ -14,6 +14,7 @@
     <ProjectGuid>{CCE3447F-FBF5-4175-B6B1-0F5520D095D9}</ProjectGuid>
     <RootNamespace>SysTrayDemo</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <ProjectName>MCupload</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -85,26 +86,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MainWindow.cpp" />
+    <ClCompile Include="files.cpp" />
+    <ClCompile Include="window.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SysTrayDemo.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="upload.cpp" />
     <ClCompile Include="watch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="SysTrayDemo.h" />
+    <ClInclude Include="MCuploader.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico" />
     <Image Include="SysTrayDemo.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="SysTrayDemo.rc" />
+    <ResourceCompile Include="MCupload.rc" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
