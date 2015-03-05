@@ -4,6 +4,8 @@ var express = require('express')
   , bodyParser = require('body-parser')
   , multer = require('multer')
   , path = require('path')
+  , fs = require('fs')
+  , md5 = require('md5')
   , models = require('./models')
   , app = express()
   ;
@@ -17,7 +19,7 @@ app.set('view engine', 'jade');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ dest: './uploads' }));
+app.use(multer({ dest: './uploads', inMemory: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/upload', function(req, res) {
@@ -26,14 +28,29 @@ app.post('/upload', function(req, res) {
     console.log('file name:', req.files.file.name);
     console.log('file path:', req.files.file.path);
 
+    var hash = md5(req.files.file.buffer);
+    console.log('file hashed to', hash);
+
     var imageRec = {
+        url: req.files.file.path,
+        name: req.files.file.originalname,
         user: req.body.user,
-        url: req.files.file.path
+        hash: hash
     };
 
     console.log('Adding new image to database:', imageRec);
     models.Image.create(imageRec).then(function() {
+        fs.writeFile(req.files.file.path, req.files.file.buffer, function(err) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log('saved file to', req.files.file.path);
+            }
+        });
         res.sendStatus(204);
+    }).error(function(err) {
+        console.log(err);
+        res.sendStatus(409); // conflict
     });
 });
 
