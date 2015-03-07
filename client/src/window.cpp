@@ -131,6 +131,39 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
         SetFocus(hEmailEditControl);
 
     }
+
+
+
+    BOOL bShowWorkingOnUpload = FALSE;
+    BOOL bShowFinished = FALSE;
+    BOOL bShowFailed = FALSE;
+
+
+
+
+
+    static HBRUSH hbrOrange = CreateSolidBrush(RGB(255, 187, 0));
+    static HBRUSH hbrRed = CreateSolidBrush(RGB(255, 0, 0));
+    static HBRUSH hbrGreed = CreateSolidBrush(RGB(0, 255, 0));
+
+    if (bShowWorkingOnUpload || bShowFinished || bShowFailed) {
+        int indicatorheight = 10;
+        RECT rcGreenIndicator;
+        SetRect(&rcGreenIndicator, 
+                rcClient.left, 
+                rcClient.bottom - indicatorheight,
+                rcClient.right,
+                rcClient.bottom);
+
+
+        HBRUSH hbr = hbrGreed;
+        //if (bShowWhbrGreedorkingOnUpload) {
+        //    hbr = hbrOrange;
+        //}
+        FillRect(hdc, &rcGreenIndicator, hbr);
+    }
+
+
 }
 
 

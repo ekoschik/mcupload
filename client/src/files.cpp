@@ -1,6 +1,73 @@
 
 #include "stdafx.h"
 #include "MCuploader.h"
+#include <list>
+#include <fstream>
+#include <vector>
+
+
+//
+// MarkUploaded(filename) and IsInUploadedList(filepath)
+//  writes to app directory \ uploaded.txt
+//
+
+WCHAR UploadedDataFilePath[MAX_PATH];
+std::vector<std::string> UploadedFilesList;
+
+VOID LoadAlreadyUploaded()
+{
+    wcscpy((LPWSTR)&UploadedDataFilePath, ApplicationDirectoryPath);
+    PathAppend(UploadedDataFilePath, TEXT("\\uploaded.txt"));
+
+    std::ifstream hFile(UploadedDataFilePath);
+
+    std::string line;
+    while (std::getline(hFile, line))
+        UploadedFilesList.push_back(line);
+}
+
+std::string ToStr(LPCWSTR in)
+{
+    CHAR buf[MAX_PATH];
+    ZeroMemory(&buf, MAX_PATH);
+    wcstombs((char*)&buf, in, wcslen(in));
+    std::string out = buf;
+    return out;
+}
+
+VOID MarkUploaded(LPCWSTR filename)
+{
+    //add to list
+    std::string file = ToStr(filename);
+    UploadedFilesList.push_back(file);
+
+    //write to file
+    std::ofstream hFile(UploadedDataFilePath);
+    CHAR buf[MAX_PATH];
+    for (auto it = UploadedFilesList.begin();
+        it != UploadedFilesList.end(); ++it) {
+
+        ZeroMemory(&buf, MAX_PATH);
+        sprintf((char*)&buf, "%s\n", it->c_str());
+
+        hFile.write(buf, strlen(buf));
+    }
+}
+
+BOOL IsInUploadedList(LPCWSTR filename)
+{
+    //read file and populate list
+    std::string file = ToStr(filename);
+    for (auto it = UploadedFilesList.begin();
+        it != UploadedFilesList.end(); ++it) {
+        if (it->compare(file) == 0) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+
 
 //
 //  data.ini

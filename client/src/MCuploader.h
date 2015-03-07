@@ -5,8 +5,11 @@
 #include "Shlobj.h"
 #include "Shlwapi.h"
 #include "Windowsx.h"
+#include <string>
 
 extern HINSTANCE hInst;
+extern HWND hMainWnd;
+
 
 //window.cpp
 BOOL    InitializeMainWindow();
@@ -22,20 +25,39 @@ extern WCHAR ApplicationDirectoryPath[MAX_PATH];
 BOOL    StartWatchingDirectory();
 BOOL    StopWatchingDirectory();
 LPCWSTR GetWatchedDirectory();
+extern BOOL bWaiting;
 
 //upload.cpp
 VOID    InitUpload();
-VOID    UploadFile(LPCWSTR filepath);
+BOOL    UploadFile(LPCWSTR filepath, LPCWSTR filename);
 
 //files.cpp
 BOOL    GetScreenshotsDirectoryPath();
 BOOL    InitDataFile();
 BOOL    GetEmail();
 VOID    SetEmail(LPWSTR email);
+VOID    LoadAlreadyUploaded();
+VOID    MarkUploaded(LPCWSTR lastfile);
+BOOL    IsInUploadedList(LPCWSTR filename);
+std::string ToStr(LPCWSTR in);
 extern WCHAR    Email[MAX_PATH];
 extern BOOL     bEmailSet;
 extern WCHAR    IniFilePath[MAX_PATH];
 extern WCHAR    ApplicationDirectoryPath[MAX_PATH];
 extern WCHAR    ScreenshotDirPath[MAX_PATH];
+
+//base64.cpp
+std::string base64_encode(
+    unsigned char const* bytes_to_encode, 
+    unsigned int in_len);
+
+
+
+
+//code example:
+//  https://msdn.microsoft.com/en-us/library/windows/desktop/ms737591%28v=vs.85%29.aspx
+//winsock example:
+//  http://www.tenouk.com/Winsock/Winsock2example.html
+
 
 

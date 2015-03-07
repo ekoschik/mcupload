@@ -17,7 +17,9 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
     }
 
     //Upload
-    UploadFile(filepath);
+    if (!UploadFile(filepath, filename)) {
+        //handle failed upload
+    }
 
     //Mark as uploaded
     MarkUploaded(filename);
@@ -64,14 +66,18 @@ VOID ProcessDirectoryChange()
 }
 
 
+
 //
 // Worker Thread
 //
+
+BOOL bExited;
 
 DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
 {
     DWORD dwWaitStatus;
     HANDLE dwChangeHandle;
+    bExited = FALSE;
 
     dwChangeHandle = FindFirstChangeNotification(
         (LPCWSTR)&ScreenshotDirPath,
@@ -101,66 +107,9 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
             break;
         }
     }
+
+    bExited = TRUE;
     return 0;
-}
-
-
-//
-// Keep a list of uploaded files, and remember between
-//  runs by writing and read to uploaded.txt
-//
-
-WCHAR UploadedDataFilePath[MAX_PATH];
-std::vector<std::string> UploadedFilesList;
-
-VOID LoadAlreadyUploaded()
-{
-    wcscpy((LPWSTR)&UploadedDataFilePath, ApplicationDirectoryPath);
-    PathAppend(UploadedDataFilePath, TEXT("\\uploaded.txt"));
-
-    std::ifstream hFile(UploadedDataFilePath);
-
-    std::string line;
-    while (std::getline(hFile, line))
-        UploadedFilesList.push_back(line);
-}
-
-std::string ToStr(LPCWSTR in)
-{
-    CHAR buf[MAX_PATH];
-    ZeroMemory(&buf, MAX_PATH);
-    wcstombs((char*)&buf, in, wcslen(in));
-    std::string out = buf;
-    return out;
-}
-
-VOID MarkUploaded(LPCWSTR lastfile)
-{
-    std::string file = ToStr(lastfile);
-    UploadedFilesList.push_back(file);
-
-    std::ofstream hFile(UploadedDataFilePath);
-    CHAR buf[MAX_PATH];
-    for (auto it = UploadedFilesList.begin();
-        it != UploadedFilesList.end(); ++it) {
-
-        ZeroMemory(&buf, MAX_PATH);
-        sprintf((char*)&buf, "%s\n", it->c_str());
-
-        hFile.write(buf, strlen(buf));
-    }    
-}
-
-BOOL IsInUploadedList(LPCWSTR filename)
-{
-    std::string file = ToStr(filename);
-    for (auto it = UploadedFilesList.begin();
-        it != UploadedFilesList.end(); ++it) {
-        if (it->compare(file) == 0) {
-            return TRUE;
-        }
-    }
-    return FALSE;
 }
 
 
