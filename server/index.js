@@ -22,36 +22,16 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({ dest: './uploads', inMemory: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.post('/upload', function(req, res) {
-    console.log(req.body);
-    console.log(req.files);
-    console.log('file name:', req.files.file.name);
-    console.log('file path:', req.files.file.path);
-
-    var hash = md5(req.files.file.buffer);
-    console.log('file hashed to', hash);
-
-    var imageRec = {
-        url: req.files.file.path,
-        name: req.files.file.originalname,
-        user: req.body.user,
-        hash: hash
-    };
-
-    console.log('Adding new image to database:', imageRec);
-    models.Image.create(imageRec).then(function() {
-        fs.writeFile(req.files.file.path, req.files.file.buffer, function(err) {
-            if (err) {
-                console.log(err);
-            } else {
-                console.log('saved file to', req.files.file.path);
-            }
-        });
-        res.sendStatus(204);
-    }).error(function(err) {
-        console.log(err);
-        res.sendStatus(409); // conflict
-    });
+var routes = fs.readdirSync('./routes')
+console.log(routes);
+routes = routes.filter(function(s) { return s[0] !== '.'; });
+console.log(routes);
+routes.forEach(function(route) {
+    var routeName = '/' + route.substr(0, route.indexOf('.'));
+    console.log('using route ' + routeName);
+    var router = express.Router();
+    require(path.resolve('routes', route))(router);
+    app.use(routeName, router);
 });
 
 app.get('/', function(req, res) {
