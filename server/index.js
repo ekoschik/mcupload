@@ -22,6 +22,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({ dest: './uploads', inMemory: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(function(req, res, next) {
+    console.log(req.headers);
+    console.log(req.method + ' ' + req.url);
+    next();
+});
+
 var routes = fs.readdirSync('./routes')
 console.log(routes);
 routes = routes.filter(function(s) { return s[0] !== '.'; });

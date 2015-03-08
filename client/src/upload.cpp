@@ -15,7 +15,7 @@ using namespace std;
 #define PORT       3000
 #define IP         "127.0.0.1"
 #define RECEIVER   "/upload"
-#define HOST       "locahost"
+#define HOST       "localhost"
 
 
 VOID InitUpload() { }
