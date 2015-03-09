@@ -2,7 +2,7 @@
 
 var Promise = require('bluebird')
   , fs = Promise.promisifyAll(require('fs'))
-  , join = require('path').join
+  , path = require('path')
   , crypto = require('crypto')
   , md5 = require('MD5')
   , log = console.log
@@ -40,15 +40,17 @@ module.exports = function(router, models) {
             filename = req.files.file.originalname;
         }
 
-        var user = req.body.user
-          , path = createFileName()
+        var ext  = path.extname(filename)
+          , user = req.body.user
+          , url  = createFileName() + ext
           , hash = md5(buffer)
           ;
 
         console.log('File ' + filename + ' hashed to ' + hash);
 
+        // I think we want to validate that the uploaded file is an image...
         var imageRec = {
-            url : path
+            url : url
           , name: filename
           , user: user
           , hash: hash
@@ -56,7 +58,7 @@ module.exports = function(router, models) {
 
         log('Adding new image to database:', imageRec);
 
-        models.Image.create(imageRec).then(fs.writeFileAsync.bind(null, join(uploadDir, path), buffer))
+        models.Image.create(imageRec).then(fs.writeFileAsync.bind(null, path.join(uploadDir, url), buffer))
                                      .then(res.sendStatus.bind(res, 204))
                                      .error(res.sendStatus.bind(res, 409));
     });
