@@ -37,6 +37,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({ dest: './uploads', inMemory: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// TODO: this function is really ugly, make it more elegant
 function loadRoutes(base) {
     return (function loadRoutesHelper(dir) {
         fs.readdirSync(dir).forEach(function(file) {
@@ -53,7 +54,8 @@ function loadRoutes(base) {
                 require('./' + routePath)(router, models);
 
                 console.log('using route ' + routeName);
-                app.use(routeName, router);
+                // replace backslash with forward slash, fix for windows
+                app.use(routeName.replace(/\\/g, '/'), router);
             }
         });
     })(base);
