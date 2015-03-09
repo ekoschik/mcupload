@@ -10,16 +10,22 @@
 extern HINSTANCE hInst;
 extern HWND hMainWnd;
 
+//__inline VOID Error(string msg) {
+//    MessageBox(NULL,
+//        _T("GetMonitorInfo failed."), _T("Error"), MB_OK);
+//}
+
 
 //window.cpp
-BOOL    InitializeMainWindow();
-VOID    OpenMainWindow(HWND hwnd);
-VOID    CloseMainWindow();
+BOOL InitializeMainWindow(HWND hWnd);
 VOID    DrawMainWindow(HWND hwnd, HDC hdc);
 BOOL    MainMenu_HandleWindowMessages(
             HWND, UINT, WPARAM, LPARAM);
 extern WCHAR IniFilePath[MAX_PATH];
 extern WCHAR ApplicationDirectoryPath[MAX_PATH];
+extern int window_width;
+extern int window_height;
+
 
 //watch.cpp
 BOOL    StartWatchingDirectory();

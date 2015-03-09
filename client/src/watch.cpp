@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 
+std::vector<std::string> SuccessfullyUploadedFiles;
+
 VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 {
     //Skip files that have already been uploaded
@@ -14,11 +16,11 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
     }
 
     //Upload
-    if (!UploadFile(filepath, filename)) {
-        return;
+    if (UploadFile(filepath, filename)) {
+        SuccessfullyUploadedFiles.push_back(ToStr(filepath));
     }
 
-    //Mark as uploaded
+    //Mark as uploaded to not upload again
     MarkUploaded(filename);
 }
 
@@ -68,13 +70,11 @@ VOID ProcessDirectoryChange()
 // Worker Thread
 //
 
-BOOL bExited;
-
 DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
 {
+
     DWORD dwWaitStatus;
     HANDLE dwChangeHandle;
-    bExited = FALSE;
 
     dwChangeHandle = FindFirstChangeNotification(
         (LPCWSTR)&ScreenshotDirPath,
@@ -88,6 +88,7 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
         return -1;
     }
 
+    //Read through directory once on startup
     ProcessDirectoryChange();
 
     while (TRUE) {
@@ -107,7 +108,6 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
         }
     }
 
-    bExited = TRUE;
     return 0;
 }
 
@@ -118,6 +118,7 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
 //
 
 HANDLE hThread;
+
 
 BOOL StartWatchingDirectory()
 {

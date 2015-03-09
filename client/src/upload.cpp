@@ -12,7 +12,10 @@
 #include "windows.h"
 #include "stdio.h"
 
-VOID InitUpload() { }
+VOID InitUpload() 
+{ 
+    
+}
 
 /*
     Well, this is what seemed to work:
@@ -69,15 +72,16 @@ string getHeader(int bodysize)
     return string(header);
 }
 
+
 BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
 {
     //Setup Connection
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        cout << "WSAStartup failed.\n";
-        system("pause");
         return FALSE;
     }
+    
+    //socket() and connect()
     SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     struct hostent *host;
     host = gethostbyname(IP);
@@ -86,41 +90,31 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
     SockAddr.sin_family = AF_INET;
     SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
     if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0){
-        cout << "Could not connect";
-        system("pause");
         return FALSE;
     }
 
     //Setup Data To Be Sent
     string filedata = getFile(filepath);
     string body = getBody(ToStr(Email), ToStr(filename), filedata);
-	//string body = "{ \"user\": \"brian\", \"file\": \"abcdefg\"}";
-    string header = getHeader(body.size());
+	string header = getHeader(body.size());
 
     //Send Request
-
-    //why is THIS not working:
     send(Socket, header.c_str(), header.size(), 0);
     send(Socket, body.c_str(), body.size(), 0);
 
-    //...but THIS is:  ?
-    //char* test_header = "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n";    
-    //send(Socket, test_header, strlen(test_header), 0);
 
-
-    char buffer[10000];
-    int nDataLength;
-    while ((nDataLength = recv(Socket, buffer, 10000, 0)) > 0){
-        int i = 0;
-        while (buffer[i] >= 32 || buffer[i] == '\n' || buffer[i] == '\r') {
-            cout << buffer[i];
-            i += 1;
-        }
-    }
+    //Read response, but for now everything is good
+    //char buffer[10000];
+    //int nDataLength;
+    //while ((nDataLength = recv(Socket, buffer, 10000, 0)) > 0){
+    //    int i = 0;
+    //    while (buffer[i] >= 32 || buffer[i] == '\n' || buffer[i] == '\r') {
+    //        cout << buffer[i];
+    //        i += 1;
+    //    }
+    //}
     closesocket(Socket);
     WSACleanup();
-
-    system("pause");
     return TRUE;
 }
 

@@ -14,43 +14,33 @@ TCHAR szApplicationToolTip[MAX_LOADSTRING];
 
 HWND hMainWnd;
 
-VOID Initialize()
-{
-    hMainWnd = NULL;
-
-    InitializeMainWindow();
-
-    InitUpload();
-
-    StartWatchingDirectory();
-
-}
-
 
 LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
                                  UINT message,
                                  WPARAM wParam,
                                  LPARAM lParam)
 {
-    PAINTSTRUCT ps;
-    static BOOL bFirstCreation = TRUE;
     switch (message) {
     case WM_CREATE:
-        OpenMainWindow(hWnd);
+        InitializeMainWindow(hWnd);
         break;
 
-    //TODO: catch when losing focus and close
+    //TODO: catch when losing focus and hide window
 
-    case WM_PAINT:
+    case WM_PAINT: 
+    {
+        PAINTSTRUCT ps;
         DrawMainWindow(hWnd, BeginPaint(hWnd, &ps));
         EndPaint(hWnd, &ps);
         break;
+    }
 
     case WM_DESTROY:
         break;
-
+    
     }
 
+    //All other messages are handled in window.cpp
     if (MainMenu_HandleWindowMessages(hWnd, message, wParam, lParam)) {
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
@@ -58,7 +48,7 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
     return 0;
 }
 
-RECT GetMonitorRect()
+RECT GetClickPointMonitorRect()
 {
     POINT ClickPoint;
     GetCursorPos(&ClickPoint);
@@ -76,17 +66,9 @@ RECT GetMonitorRect()
     return moninfo.rcWork;
 }
 
-VOID ActivateWindow(HWND hWnd)
-{ 
-    const int height = 300;
-    const int width = 500;
-
-    if (hMainWnd != NULL) {
-        DestroyWindow(hMainWnd);
-        hMainWnd = NULL;
-        return;
-    }
-
+VOID CreateMainWindow(HWND hWndParent)
+{
+    //Register Window
     LPCWSTR wndclass = TEXT("MainMenuWndClass");
     WNDCLASSEX wcex;
     ZeroMemory(&wcex, sizeof(WNDCLASSEX));
@@ -104,14 +86,16 @@ VOID ActivateWindow(HWND hWnd)
     wcex.hIconSm = NULL;
     RegisterClassEx(&wcex);
 
-    RECT rcwork = GetMonitorRect();
-    rcwork.top = rcwork.bottom - height;
-    rcwork.left = rcwork.right - width;
+    //Setup Window Work Area
+    RECT rcwork = GetClickPointMonitorRect();
+    rcwork.top = rcwork.bottom - window_height;
+    rcwork.left = rcwork.right - window_width;
     rcwork.top -= 5;
     rcwork.left -= 5;
     rcwork.right -= 5;
     rcwork.bottom -= 5;
 
+    //Create Window
     hMainWnd = CreateWindow(
         wndclass, NULL,
         WS_POPUP,
@@ -119,7 +103,7 @@ VOID ActivateWindow(HWND hWnd)
         rcwork.top,
         rcwork.right - rcwork.left,
         rcwork.bottom - rcwork.top,
-        hWnd, NULL, hInst, NULL);
+        hWndParent, NULL, hInst, NULL);
     
     ShowWindow(hMainWnd, SW_SHOW);
     SetActiveWindow(hMainWnd);
@@ -130,16 +114,16 @@ VOID ActivateWindow(HWND hWnd)
 
 VOID ActivatePopupMenu(HWND hWnd)
 {
-
-    POINT lpClickPoint;
-    GetCursorPos(&lpClickPoint);
     hPopMenu = CreatePopupMenu();
 
-    //Exit
+    //'Exit' option
     InsertMenu(hPopMenu, 0xFFFFFFFF, 
         MF_BYPOSITION | MF_STRING, IDM_EXIT, _T("Exit"));
 
     SetForegroundWindow(hWnd);
+
+    POINT lpClickPoint;
+    GetCursorPos(&lpClickPoint);
     TrackPopupMenu(hPopMenu, 
         TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, 
         lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
@@ -165,13 +149,23 @@ LRESULT CALLBACK WndProc(HWND hWnd,
                          LPARAM lParam) 
 {
 	switch (message) {
+    case WM_CREATE:
+        CreateMainWindow(hWnd);
+        break;
 
 	case WM_USER_SHELLICON: 
         switch (LOWORD(lParam))  {
         case WM_LBUTTONDOWN:
-            ActivateWindow(hWnd);
+        {
+            //toggle showing the window
+            static bool bShow = FALSE;
+            bShow = !bShow;
+            ShowWindow(hMainWnd, bShow ? SW_SHOW : SW_FORCEMINIMIZE);
             return TRUE;
-		case WM_RBUTTONDOWN: 
+        }
+
+        //right click shows the popup menu
+        case WM_RBUTTONDOWN:
             ActivatePopupMenu(hWnd);
 			return TRUE;
 		}
@@ -257,7 +251,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     hInst = hInstance;
 
-    Initialize();
+    hMainWnd = NULL;
+
+    InitUpload();
+
+    StartWatchingDirectory();
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
