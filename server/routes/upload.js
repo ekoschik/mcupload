@@ -17,6 +17,7 @@ function saveFile(path, buffer) {
     });
 }
 
+// TODO: don't make this random, base it on the username
 function createFileName() {
     return crypto.randomBytes(20).toString('hex');
 }
@@ -40,7 +41,7 @@ module.exports = function(router, models) {
         }
 
         var user = req.body.user
-          , path = join(uploadDir, createFileName())
+          , path = createFileName()
           , hash = md5(buffer)
           ;
 
@@ -55,7 +56,7 @@ module.exports = function(router, models) {
 
         log('Adding new image to database:', imageRec);
 
-        models.Image.create(imageRec).then(fs.writeFileAsync.bind(null, path, buffer))
+        models.Image.create(imageRec).then(fs.writeFileAsync.bind(null, join(uploadDir, path), buffer))
                                      .then(res.sendStatus.bind(res, 204))
                                      .error(res.sendStatus.bind(res, 409));
     });
