@@ -59,7 +59,7 @@ string getHeader(int bodysize)
     char header[1024];
     ZeroMemory(&header, 1024);
     sprintf(header,
-        "POST %s HTTP 1.1\r\n"
+        "POST %s HTTP/1.1\r\n"
         "Host: %s\r\n"
         "Content-Length: %d\r\n"
         "Connection: Keep-Alive\r\n"
@@ -94,17 +94,18 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
     //Setup Data To Be Sent
     string filedata = getFile(filepath);
     string body = getBody(ToStr(Email), ToStr(filename), filedata);
+	//string body = "{ \"user\": \"brian\", \"file\": \"abcdefg\"}";
     string header = getHeader(body.size());
 
     //Send Request
 
     //why is THIS not working:
-    //send(Socket, header.c_str(), header.size(), 0);
-    //send(Socket, body.c_str(), body.size(), 0);
+    send(Socket, header.c_str(), header.size(), 0);
+    send(Socket, body.c_str(), body.size(), 0);
 
     //...but THIS is:  ?
-    char* test_header = "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n";    
-    send(Socket, test_header, strlen(test_header), 0);
+    //char* test_header = "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n";    
+    //send(Socket, test_header, strlen(test_header), 0);
 
 
     char buffer[10000];
