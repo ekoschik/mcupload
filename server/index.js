@@ -13,6 +13,10 @@ var express = require('express')
 
 var PORT = process.env.PORT || 3000;
 
+app.disable('x-powered-by');
+if (app.get('env') === 'development') {
+    app.set('json spaces', 4);
+}
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
