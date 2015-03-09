@@ -6,9 +6,6 @@
 #include <vector>
 #include <string>
 
-VOID MarkUploaded(LPCWSTR lastfile);
-BOOL IsInUploadedList(LPCWSTR filename);
-
 VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 {
     //Skip files that have already been uploaded
@@ -18,7 +15,7 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 
     //Upload
     if (!UploadFile(filepath, filename)) {
-        //handle failed upload
+        return;
     }
 
     //Mark as uploaded
@@ -90,6 +87,8 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
             _T("Error"), MB_OK);
         return -1;
     }
+
+    ProcessDirectoryChange();
 
     while (TRUE) {
         dwWaitStatus = WaitForSingleObject(dwChangeHandle, INFINITE);
