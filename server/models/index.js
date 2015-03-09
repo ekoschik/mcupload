@@ -5,9 +5,8 @@ var path      = require("path");
 var Sequelize = require("sequelize");
 var extend    = require("util")._extend;
 var basename  = path.basename(module.filename);
-var env       = process.env.NODE_ENV || "development";
-var config    = require(__dirname + '/../config/config.json')[env];
-                extend(config, { define: { freezeTableName: true } }); // make sure sequelize doesn't mess with our table names
+var config    = require('config').get('database');
+    config    = extend(config, { define: { freezeTableName: true } }); // make sure sequelize doesn't mess with our table names
 var sequelize = new Sequelize(config.database, config.username, config.password, config);
 var db        = {};
 

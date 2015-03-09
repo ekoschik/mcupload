@@ -1,6 +1,7 @@
 {
-  "development": {
+  "database": {
     "dialect": "sqlite",
     "storage": "mcupload.db"
-  }
+  },
+  "minecraftDir": null
 }
