@@ -18,6 +18,7 @@ module.exports = function(router, models) {
 
     router.get('/:id', function(req, res) {
         var id = req.params.id;
-        res.sendFile(path.join(uploadDir, id));
+        // TODO: this is a security flaw!! Any file can be requested from the server
+        res.sendFile(path.resolve(uploadDir, id));
     })
 }
