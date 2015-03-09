@@ -28,21 +28,38 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({ dest: './uploads', inMemory: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-var routes = fs.readdirSync('./routes')
-console.log(routes);
-routes = routes.filter(function(s) { return s[0] !== '.'; });
-console.log(routes);
-routes.forEach(function(route) {
-    var routeName = '/' + route.substr(0, route.indexOf('.'));
-    console.log('using route ' + routeName);
-    var router = express.Router();
-    require(path.resolve('routes', route))(router);
-    app.use(routeName, router);
-});
+function isDirectory(path) {
+    return fs.lstatSync(path).isDirectory();
+}
 
-app.get('/', function(req, res) {
-    res.render('upload_form.jade', { title: 'Upload File' });
-});
+app.use(bodyParser.json({ limit: '2mb' }));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(multer({ dest: './uploads', inMemory: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+function loadRoutes(base) {
+    return (function loadRoutesHelper(dir) {
+        fs.readdirSync(dir).forEach(function(file) {
+            if (file[0] === '.') return; // skip hidden files/directories
+
+            routePath = path.join(dir, file);
+            if (isDirectory(routePath)) {
+                loadRoutesHelper(routePath);
+            } else {
+                // remove the extension, remove the base directory name
+                var routeName = routePath.substr(0, routePath.indexOf('.')).substr(base.length);
+
+                var router = express.Router();
+                require('./' + routePath)(router, models);
+
+                console.log('using route ' + routeName);
+                app.use(routeName, router);
+            }
+        });
+    })(base);
+}
+
+loadRoutes('routes');
 
 // development error handler
 // will print stacktrace

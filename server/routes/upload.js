@@ -2,8 +2,8 @@
 
 var Promise = require('bluebird')
   , fs = Promise.promisifyAll(require('fs'))
+  , crypto = require('crypto')
   , md5 = require('MD5')
-  , models = require('../models')
   , log = console.log
   ;
 
@@ -15,25 +15,38 @@ function saveFile(path, buffer) {
     });
 }
 
-module.exports = function(router) {
+function createFileName() {
+    return crypto.randomBytes(20).toString('hex');
+}
+
+module.exports = function(router, models) {
 
     router.post('/', function(req, res) {
         // TODO: make sure a file was uploaded or a url was given, and a username is given.
         log(req.body);
         log(req.files);
 
-        var /** {string} */ user         = req.body.user
-          , /** {string} */ path         = req.files.file.path
-          , /** {string} */ originalname = req.files.file.originalname
-          , /** {buffer} */ buffer       = req.files.file.buffer
-          , /** {string} */ hash         = md5(buffer)
+        var buffer, filename;
+
+        // if this is a json payload, we must decode the base64 file data
+        if (req.headers['content-type'].indexOf('json') !== -1) {
+            buffer = new Buffer(req.body.filedata, 'base64');
+            filename = req.body.filename;
+        } else {
+            buffer = req.files.file.buffer;
+            filename = req.files.file.originalname;
+        }
+
+        var user         = req.body.user
+          , path         = createFileName()
+          , hash         = md5(buffer)
           ;
 
-        console.log('File ' + path + ' hashed to ' + hash);
+        console.log('File ' + filename + ' hashed to ' + hash);
 
         var imageRec = {
             url : path
-          , name: originalname
+          , name: filename
           , user: user
           , hash: hash
         };
@@ -43,5 +56,9 @@ module.exports = function(router) {
         models.Image.create(imageRec).then(fs.writeFileAsync.bind(null, path, buffer))
                                      .then(res.sendStatus.bind(res, 204))
                                      .error(res.sendStatus.bind(res, 409));
+    });
+
+    router.get('/', function(req, res) {
+        res.render('upload_form.jade', { title: 'Upload File' });
     });
 };
