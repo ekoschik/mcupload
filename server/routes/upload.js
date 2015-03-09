@@ -1,11 +1,12 @@
 'use strict';
 
-var Promise = require('bluebird')
-  , fs = Promise.promisifyAll(require('fs'))
-  , path = require('path')
-  , crypto = require('crypto')
-  , md5 = require('MD5')
-  , log = console.log
+var Promise   = require('bluebird')
+  , fs        = Promise.promisifyAll(require('fs'))
+  , path      = require('path')
+  , crypto    = require('crypto')
+  , md5       = require('MD5')
+  , validate  = require('../lib/validate')
+  , log       = console.log
   , uploadDir = require('config').get('uploadDir')
   ;
 
@@ -32,7 +33,7 @@ module.exports = function(router, models) {
         var buffer, filename;
 
         // if this is a json payload, we must decode the base64 file data
-        if (req.headers['content-type'].indexOf('json') !== -1) {
+        if (req.is('json')) {
             buffer = new Buffer(req.body.filedata, 'base64');
             filename = req.body.filename;
         } else {
@@ -40,27 +41,34 @@ module.exports = function(router, models) {
             filename = req.files.file.originalname;
         }
 
-        var ext  = path.extname(filename)
-          , user = req.body.user
-          , url  = createFileName() + ext
-          , hash = md5(buffer)
-          ;
+        validate.isImage(buffer).then(function() {
 
-        console.log('File ' + filename + ' hashed to ' + hash);
+            var ext  = path.extname(filename)
+              , user = req.body.user
+              , url  = createFileName() + ext
+              , hash = md5(buffer)
+              ;
 
-        // I think we want to validate that the uploaded file is an image...
-        var imageRec = {
-            url : url
-          , name: filename
-          , user: user
-          , hash: hash
-        };
+            console.log('File ' + filename + ' hashed to ' + hash);
 
-        log('Adding new image to database:', imageRec);
+            var imageRec = {
+                url : url
+              , name: filename
+              , user: user
+              , hash: hash
+            };
 
-        models.Image.create(imageRec).then(fs.writeFileAsync.bind(null, path.join(uploadDir, url), buffer))
-                                     .then(res.sendStatus.bind(res, 204))
-                                     .error(res.sendStatus.bind(res, 409));
+            log('Adding new image to database:', imageRec);
+
+            return models.Image.create(imageRec).then(fs.writeFileAsync.bind(null, path.join(uploadDir, url), buffer))
+                                                .then(res.sendStatus.bind(res, 204));
+        }).catch(validate.ValidationError, function(e) {
+            res.status(403).json({ error: 'The uploaded file is not an image.' });
+        }).catch(models.sequelize.UniqueConstraintError, function(e) {
+            res.status(409).json({ error: 'This file has already been uploaded.'});
+        }).catch(function(e) {
+            res.status(500).json({ error: e.message });
+        });
     });
 
     router.get('/', function(req, res) {
