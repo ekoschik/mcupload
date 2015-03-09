@@ -2,9 +2,11 @@
 
 var Promise = require('bluebird')
   , fs = Promise.promisifyAll(require('fs'))
+  , join = require('path').join
   , crypto = require('crypto')
   , md5 = require('MD5')
   , log = console.log
+  , uploadDir = require('config').get('uploadDir')
   ;
 
 function saveFile(path, buffer) {
@@ -37,9 +39,9 @@ module.exports = function(router, models) {
             filename = req.files.file.originalname;
         }
 
-        var user         = req.body.user
-          , path         = createFileName()
-          , hash         = md5(buffer)
+        var user = req.body.user
+          , path = join(uploadDir, createFileName())
+          , hash = md5(buffer)
           ;
 
         console.log('File ' + filename + ' hashed to ' + hash);

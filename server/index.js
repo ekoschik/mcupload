@@ -5,7 +5,7 @@ var express = require('express')
   , multer = require('multer')
   , path = require('path')
   , fs = require('fs')
-  , md5 = require('md5')
+  , config = require('config')
   , models = require('./models')
   , app = express()
   ;
@@ -32,7 +32,7 @@ function isDirectory(path) {
     return fs.lstatSync(path).isDirectory();
 }
 
-app.use(bodyParser.json({ limit: '2mb' }));
+app.use(bodyParser.json({ limit: config.get('jsonSizeLimit') }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({ dest: './uploads', inMemory: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -65,6 +65,7 @@ loadRoutes('routes');
 // will print stacktrace
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
+    console.log(err);
     res.status(err.status || 500);
     res.render('error', {
       message: err.message,
@@ -76,6 +77,7 @@ if (app.get('env') === 'development') {
 // production error handler
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
+  console.log(err);
   res.status(err.status || 500);
   res.render('error', {
     message: err.message,
