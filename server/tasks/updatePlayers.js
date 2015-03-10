@@ -1,10 +1,10 @@
 'use strict';
 
-var Promise = require('bluebird')
-  , fs = Promise.promisifyAll(require('fs'))
-  , path = require('path')
-  , config = require('config')
-  , mojang = require('../lib/mojang')
+var Promise    = require('bluebird')
+  , fs         = Promise.promisifyAll(require('fs'))
+  , path       = require('path')
+  , config     = require('config')
+  , mojang     = require('../lib/mojang')
   , NBTMonitor = require('../lib/nbtmonitor')
   ;
 
@@ -20,27 +20,33 @@ module.exports = function(models) {
     }
 
     var minecraftDir = config.get('minecraftDir');
-    var playerDir = path.join(config.minecraftDir, 'world', 'playerdata');
+    var playerDir = path.join(minecraftDir, 'world', 'playerdata');
 
     // start by checking each playerdata file agains the database
-    fs.readdirAsync(playerDir).map(removeExtension).map(function(uuid) {
+    var playerPromises = fs.readdirAsync(playerDir).map(removeExtension).map(function(uuid) {
+
         console.log('checking if player ' + uuid + ' already exists in the database');
-        return models.Player.find(uuid).then(function(player) {
+
+        return models.Player.find({ where: { uuid: uuid }, attributes: ['uuid'] }).then(function(player) {
             console.log('got player ' + player);
             if (player !== null) return; // we already have the player stored
-            // if the playerdata file doesn't have an entry, add it
-            return mojang.getUsernameFromUUID(uuid).catch(mojang.MojangError, function(e) {
-                console.log(e.message);
-            });
+            return mojang.getUsernameFromUUID(uuid);
         }).then(function(username) {
+            if (username === undefined) return;
             console.log('saving player uuid=' + uuid + ', name=' + username);
             return models.Player.create({
                 uuid: uuid,
                 name: username
             });
+        }).catch(function(e) {
+            console.log(e);
         });
-    }).then(function() {
-        console.log('here now');
+    });
+    Promise.settle(playerPromises).then(function(results) {
+        console.log('finished updating all players!');
+        results.forEach(function(result) {
+            console.log(JSON.stringify(result));
+        })
     });
     
     // then start the monitor, saving the player position every time it updates
