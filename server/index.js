@@ -27,19 +27,14 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.use(bodyParser.json({ limit: '2mb' }));
+app.use(bodyParser.json({ limit: config.get('jsonSizeLimit') }));
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ dest: './uploads', inMemory: true }));
+app.use(multer({ dest: config.get('uploadDir'), inMemory: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 function isDirectory(path) {
     return fs.lstatSync(path).isDirectory();
 }
-
-app.use(bodyParser.json({ limit: config.get('jsonSizeLimit') }));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ dest: './uploads', inMemory: true }));
-app.use(express.static(path.join(__dirname, 'public')));
 
 // TODO: this function is really ugly, make it more elegant
 function loadRoutes(base) {
