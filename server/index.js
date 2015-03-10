@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-var express = require('express')
+var express    = require('express')
   , bodyParser = require('body-parser')
-  , multer = require('multer')
-  , path = require('path')
-  , fs = require('fs')
-  , config = require('config')
-  , models = require('./models')
-  , app = express()
+  , multer     = require('multer')
+  , path       = require('path')
+  , fs         = require('fs')
+  , config     = require('config')
+  , models     = require('./models')
+  , app        = express()
   ;
 
 
