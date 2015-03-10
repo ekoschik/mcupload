@@ -47,7 +47,7 @@ string getFile(LPCWSTR filepath)
 
 string getBody(string email, string filename, string filedata) {
     string body;
-    body.append("{\"email\":\"");
+    body.append("{\"user\":\"");
     body.append(email.c_str());
     body.append("\",\"filename\":\"");
     body.append(filename.c_str());
@@ -103,19 +103,21 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
     send(Socket, body.c_str(), body.size(), 0);
 
 
-    //Read response, but for now everything is good
-    //char buffer[10000];
-    //int nDataLength;
-    //while ((nDataLength = recv(Socket, buffer, 10000, 0)) > 0){
-    //    int i = 0;
-    //    while (buffer[i] >= 32 || buffer[i] == '\n' || buffer[i] == '\r') {
-    //        cout << buffer[i];
-    //        i += 1;
-    //    }
-    //}
+    //Read response
+    char buffer[10000] = { };
+    int nDataLength;
+    nDataLength = recv(Socket, buffer, 10000, 0);
+
+    char* retStatus = buffer + 9;
+
+    BOOL success = FALSE;
+    if (retStatus[0] == '2') {
+        success  = TRUE;
+    }
+
     closesocket(Socket);
     WSACleanup();
-    return TRUE;
+    return success;
 }
 
 

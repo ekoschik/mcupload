@@ -31,7 +31,6 @@ extern int window_height;
 BOOL    StartWatchingDirectory();
 BOOL    StopWatchingDirectory();
 LPCWSTR GetWatchedDirectory();
-extern BOOL bWaiting;
 
 //upload.cpp
 VOID    InitUpload();
