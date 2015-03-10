@@ -48,7 +48,7 @@ function loadRoutes(base) {
                 var routeName = routePath.substr(0, routePath.indexOf('.')).substr(base.length);
 
                 var router = express.Router();
-                require('./' + routePath)(router, models);
+                require(path.join(__dirname, routePath))(router, models);
 
                 console.log('using route ' + routeName);
                 // replace backslash with forward slash, fix for windows
@@ -58,7 +58,15 @@ function loadRoutes(base) {
     })(base);
 }
 
+function loadTasks(taskDir) {
+    fs.readdirSync(taskDir).forEach(function(task) {
+        console.log('loading task ' + task);
+        require(path.join(__dirname, taskDir, task))(models);
+    });
+}
+
 loadRoutes('routes');
+loadTasks('tasks');
 
 // development error handler
 // will print stacktrace

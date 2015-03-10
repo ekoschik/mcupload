@@ -43,14 +43,13 @@ function NBTFile(fname, emitter) {
     self.fname = fname;
     self.emitter = emitter;
     self.lastUpdated = new Date().getTime();
-    self.cleanName = path.basename(self.fname.substr(0, self.fname.length - path.extname(self.fname).length));
 
     console.log('new nbtfile ' + fname);
 
     parseNBT(self.fname, function(err, data) {
         if (err) throw err;
         self.data = data;
-        console.log(data);
+        //console.log(data);
         self.emitter.emit('load', {
             file: self.cleanName,
             data: data
@@ -71,13 +70,13 @@ NBTFile.prototype.update = function() {
 
     parseNBT(self.fname, function(err, data) {
         var delta = jdp.diff(self.data, data);
-        console.log(delta);
-        self.emitter.emit('delta', {
-            file: self.cleanName,
+        //console.log(delta);
+        self.emitter.emit('update-delta', {
+            file: self.fname,
             data: delta
         });
         self.emitter.emit('update', {
-            file: self.cleanName,
+            file: self.fname,
             data: data
         });
         self.data = data;
@@ -125,7 +124,7 @@ NBTMonitor.prototype.initializeFiles = function() {
     fs.readdir(self.dir, function(err, files) {
         if (err) throw err;
 
-        console.log("Found files in" + self.dir + ": " + files);
+        console.log("Found files in" + self.dir + ": " + files.join(', '));
         files.forEach(function(fname) {
             self.newFile(path.join(self.dir, fname));
         });
