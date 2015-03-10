@@ -4,9 +4,10 @@
  * Api for getting a minecraft user name from the uuid or vise versa
  */
 
-var Promise = require('bluebird')
-  , request = Promise.promisify(require('request'))
-  , util = require('util')
+var Promise     = require('bluebird')
+  , request     = Promise.promisify(require('request'))
+  , util        = require('util')
+  , MojangError = require('./errorutils').createError('MojangError')
   ;
 
 
@@ -25,14 +26,6 @@ function dashUUID(uuid) {
            uuid.substr(16, 4) + '-' + 
            uuid.substr(20);
 }
-
-function MojangError(message) {
-    this.message = message;
-    this.name = "MojangError";
-    Error.captureStackTrace(this, MojangError);
-}
-MojangError.prototype = Object.create(Error.prototype);
-MojangError.prototype.constructor = MojangError;
 
 var mojang = {
     getUsernameFromUUID: function(uuid) {
@@ -57,16 +50,11 @@ var mojang = {
 module.exports = mojang;
 
 if (require.main === module) {
-    /*
-    mojang.getUsernameFromUUID(process.argv[2]).then(function(username) {
-        console.log(username);
-        return username
-    }).then(mojang.getUUIDFromUsername).then(function(uuid) {
-        console.log(uuid);
-    }).catch(function(e) {
-        console.log(e);
-    });
-    */
+    if (process.argv[2] === undefined) {
+        console.log('usage: ' + process.argv[0] + ' ' + process.argv[1] + ' <username>');
+        process.exit(1);
+    }
+
     mojang.getUUIDFromUsername(process.argv[2]).then(function(uuid) {
         console.log('got ' + uuid + ' for user ' + process.argv[2]);
     }).catch(function(e) {
