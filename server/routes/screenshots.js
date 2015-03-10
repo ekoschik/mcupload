@@ -1,7 +1,7 @@
 'use strict';
 
-var config = require('config')
-  , path = require('path')
+var config    = require('config')
+  , path      = require('path')
   , uploadDir = config.get('uploadDir')
   ;
 
@@ -18,7 +18,13 @@ module.exports = function(router, models) {
 
     router.get('/:id', function(req, res) {
         var id = req.params.id;
-        // TODO: this is a security flaw!! Any file can be requested from the server
-        res.sendFile(path.resolve(uploadDir, id));
+        res.sendFile(id, { root: uploadDir }, function(e) {
+            var status = e.status;
+            var message = {
+                403: 'Forbidden',
+                404: 'File "' + id + '" was not found.'
+            }[status];
+            res.status(status).json({ status: status, error: message });
+        });
     })
 }
