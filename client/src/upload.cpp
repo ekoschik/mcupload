@@ -17,12 +17,7 @@ VOID InitUpload()
     
 }
 
-/*
-    Well, this is what seemed to work:
-    http://stackoverflow.com/questions/1011339/how-do-you-make-a-http-request-with-c
-*/
-
-#pragma comment(lib, "Ws2_32.lib")
+//#pragma comment(lib, "Ws2_32.lib")
 
 using namespace std;
 
@@ -45,10 +40,10 @@ string getFile(LPCWSTR filepath)
     return filedata64;
 }
 
-string getBody(string email, string filename, string filedata) {
+string getBody(string username, string filename, string filedata) {
     string body;
     body.append("{\"user\":\"");
-    body.append(email.c_str());
+    body.append(username.c_str());
     body.append("\",\"filename\":\"");
     body.append(filename.c_str());
     body.append("\",\"filedata\":\"");
@@ -95,7 +90,7 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
 
     //Setup Data To Be Sent
     string filedata = getFile(filepath);
-    string body = getBody(ToStr(Email), ToStr(filename), filedata);
+    string body = getBody(ToStr(Username), ToStr(filename), filedata);
 	string header = getHeader(body.size());
 
     //Send Request

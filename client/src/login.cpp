@@ -3,9 +3,7 @@
 #include "MCuploader.h"
 
 
-extern HFONT hFontHeader;
-extern HFONT hFontNormal;
-extern HFONT hFontSmall;
+extern HWND hwndMain;
 
 RECT rcLoginHeader;
 RECT rcLoginUsernameText;
@@ -28,6 +26,21 @@ VOID Login_Commit()
     WCHAR world[MAX_PATH];
     GetWindowText(hLoginUsernameEditControl, username, MAX_PATH);
     GetWindowText(hLoginWorldEditControl, world, MAX_PATH);
+
+    SetKey(TEXT("username"), (LPWSTR)&username);
+    SetKey(TEXT("world"), (LPWSTR)&world);
+
+    bUsernameSet = TRUE;
+    InvalidateRect(hwndMain, NULL, TRUE);
+}
+
+VOID HideEditControls()
+{
+    SetWindowPos(hLoginUsernameEditControl, NULL,
+        0, 0, 0, 0, SWP_HIDEWINDOW);
+
+    SetWindowPos(hLoginWorldEditControl, NULL,
+        0, 0, 0, 0, SWP_HIDEWINDOW);
 }
 
 INT_PTR CALLBACK EmailEditControlWndProc(
@@ -52,8 +65,19 @@ INT_PTR CALLBACK EmailEditControlWndProc(
         OldUsernameEditWndProc(hwndDlg, uMsg, wParam, lParam) :
         OldWorldEditWndProc(hwndDlg, uMsg, wParam, lParam);
 }
+
+BOOL bUsernameSet;
+WCHAR Username[MAX_PATH];
+
 BOOL Init_Login(HWND hWnd)
 {
+    WCHAR username[MAX_PATH];
+    WCHAR world[MAX_PATH];
+    ZeroMemory(&username, MAX_PATH);
+    ZeroMemory(&world, MAX_PATH);
+    bUsernameSet = GetKey(TEXT("username"), (LPWSTR)&username);
+    GetKey(TEXT("world"), (LPWSTR)&world);
+
     //Create edit control and hide them
     hLoginUsernameEditControl = CreateWindow(TEXT("edit"), NULL,
         WS_CHILD | WS_VISIBLE | WS_BORDER,
@@ -69,19 +93,7 @@ BOOL Init_Login(HWND hWnd)
         return FALSE;
     }
 
-    SetWindowPos(hLoginUsernameEditControl, NULL,
-        rcLoginUsernameEdit.left,
-        rcLoginUsernameEdit.top,
-        rcLoginUsernameEdit.right - rcLoginUsernameEdit.left,
-        rcLoginUsernameEdit.bottom - rcLoginUsernameEdit.top,
-        SWP_HIDEWINDOW);
-
-    SetWindowPos(hLoginWorldEditControl, NULL,
-        rcLoginWorldEdit.left,
-        rcLoginWorldEdit.top,
-        rcLoginWorldEdit.right - rcLoginWorldEdit.left,
-        rcLoginWorldEdit.bottom - rcLoginWorldEdit.top,
-        SWP_HIDEWINDOW);
+    HideEditControls();
 
     //Subclass username edit control to commit on enter/tab
     OldUsernameEditWndProc =
@@ -142,14 +154,15 @@ BOOL Init_Login(HWND hWnd)
         rcLoginWorldText.right + buf + worldeditwidth,
         rcLoginWorldText.bottom);
 
-    ////Enter Button
+    //Enter Button
+    int buttonSpace = 20;
     int buttonwidth = 50;
     int buttonheight = 20;
     SetRect(&rcLoginEnterButton,
         rcLoginWorldText.left,
-        rcLoginWorldText.bottom + buf,
+        rcLoginWorldText.bottom + buf + buttonSpace,
         rcLoginWorldText.left + buttonwidth,
-        rcLoginWorldText.bottom + buf + buttonheight);
+        rcLoginWorldText.bottom + buf + buttonSpace + buttonheight);
     SetRect(&rcLoginEnterButtonFrame,
         rcLoginEnterButton.left - 5,
         rcLoginEnterButton.top - 5,

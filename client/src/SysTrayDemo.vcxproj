@@ -89,6 +89,8 @@
     <ClCompile Include="base64.cpp" />
     <ClCompile Include="files.cpp" />
     <ClCompile Include="login.cpp" />
+    <ClCompile Include="mainview.cpp" />
+    <ClCompile Include="settings.cpp" />
     <ClCompile Include="window.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -136,33 +136,6 @@ BOOL GetKey(LPCWSTR key, LPWSTR out)
 
 
 //
-//  Email and bEmailSet
-//
-
-WCHAR   Email[MAX_PATH];
-BOOL    bEmailSet;  //false before user enters an email
-
-BOOL GetEmail()
-{
-    WCHAR email[MAX_PATH];
-    ZeroMemory(&email, MAX_PATH);
-    bEmailSet = GetKey(TEXT("email"), (LPWSTR)&email);
-    if (bEmailSet) {
-        wcscpy((LPWSTR)&Email, email);
-    }
-    return bEmailSet;
-}
-
-VOID SetEmail(LPWSTR email)
-{
-    bEmailSet = SetKey(TEXT("email"), email);
-    if (bEmailSet) {
-        wcscpy((LPWSTR)&Email, email);
-    }
-}
-
-
-//
 // Getting the \user\.minecraft\screenshots dir path
 //
 

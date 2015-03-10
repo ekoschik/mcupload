@@ -20,12 +20,15 @@ extern HWND hMainWnd;
 BOOL InitializeMainWindow(HWND hWnd);
 VOID    DrawMainWindow(HWND hwnd, HDC hdc);
 BOOL    MainMenu_HandleWindowMessages(
-            HWND, UINT, WPARAM, LPARAM);
+    HWND, UINT, WPARAM, LPARAM);
+extern WCHAR Username[MAX_PATH];
 extern WCHAR IniFilePath[MAX_PATH];
 extern WCHAR ApplicationDirectoryPath[MAX_PATH];
 extern int window_width;
 extern int window_height;
-
+extern HFONT hFontHeader;
+extern HFONT hFontNormal;
+extern HFONT hFontSmall;
 
 //watch.cpp
 BOOL    StartWatchingDirectory();
@@ -39,14 +42,13 @@ BOOL    UploadFile(LPCWSTR filepath, LPCWSTR filename);
 //files.cpp
 BOOL    GetScreenshotsDirectoryPath();
 BOOL    InitDataFile();
-BOOL    GetEmail();
-VOID    SetEmail(LPWSTR email);
+BOOL    GetKey(LPCWSTR key, LPWSTR out);
+BOOL    SetKey(LPCWSTR key, LPCWSTR val);
 VOID    LoadAlreadyUploaded();
 VOID    MarkUploaded(LPCWSTR lastfile);
 BOOL    IsInUploadedList(LPCWSTR filename);
 std::string ToStr(LPCWSTR in);
-extern WCHAR    Email[MAX_PATH];
-extern BOOL     bEmailSet;
+extern BOOL     bUsernameSet;
 extern WCHAR    IniFilePath[MAX_PATH];
 extern WCHAR    ApplicationDirectoryPath[MAX_PATH];
 extern WCHAR    ScreenshotDirPath[MAX_PATH];

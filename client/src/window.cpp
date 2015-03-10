@@ -10,6 +10,21 @@ HWND hwndMain;
 RECT rcWindow;
 BOOL bSettingsView = FALSE;
 
+#define LOGINVIEW       (!bUsernameSet)
+#define SETTINGSVIEW    (bUsernameSet && bSettingsView)
+#define NORMALVIEW      (!LOGINVIEW && !SETTINGSVIEW)
+
+VOID SwitchToMainView()
+{
+    bSettingsView = FALSE;
+    InvalidateRect(hwndMain, NULL, TRUE);
+}
+
+VOID SwitchToSettings()
+{
+    bSettingsView = TRUE;
+    InvalidateRect(hwndMain, NULL, TRUE);
+}
 
 HBRUSH hbackground;
 HFONT hFontHeader;
@@ -46,72 +61,78 @@ VOID Init_Shared()
 BOOL Init_Login(HWND hWnd);
 VOID Draw_Login(HWND hWnd, HDC hdc);
 VOID Login_Commit();
+VOID HideEditControls();
 extern RECT rcLoginEnterButtonFrame;
 
+//
+// Main View (mainview.cpp)
+//
+
+BOOL Init_MainView(HWND hWnd);
+VOID Draw_MainView(HWND hWnd, HDC hdc);
+extern RECT rctextSettings;
+
+//
+// Settings View (settings.cpp)
+//
+
+BOOL Init_Settings(HWND hWnd);
+VOID Draw_Settings(HWND hWnd, HDC hdc);
+extern RECT rctextBack;
 
 
-
-
-
-VOID Draw_Settings(HWND hWnd, HDC hdc)
-{
-
-}
-
-RECT rcText;
-RECT rcX;
-RECT rcScreemshotDir;
-
-VOID Draw_NormalView(HWND hWnd, HDC hdc)
-{
-
-    //Draw Email Value
-    WCHAR StrBuf[MAX_PATH];
-    ZeroMemory(&StrBuf, sizeof(StrBuf));
-    swprintf((LPWSTR)&StrBuf, TEXT("email: %s"), Email);
-    DrawText(hdc, (LPWSTR)&StrBuf, wcslen(StrBuf), &rcText, DT_TOP | DT_LEFT);
-
-    //Draw [change] area
-    int x = rcText.left + 20;
-    int y = rcText.top + 20;
-    SetRect(&rcX, x, y, x + 63, y + 23);
-    ZeroMemory(&StrBuf, sizeof(StrBuf));
-    swprintf((LPWSTR)&StrBuf, TEXT("[change]"));
-    DrawText(hdc, (LPWSTR)&StrBuf, wcslen(StrBuf), &rcX, DT_TOP | DT_LEFT);
-
-    //Draw Screenshots Directory
-    SetRect(&rcScreemshotDir, rcText.left,
-        y + 40, rcText.left + wcslen(ScreenshotDirPath) * 10, y + 60);
-    DrawText(hdc, ScreenshotDirPath,
-        wcslen(ScreenshotDirPath), &rcScreemshotDir, DT_TOP | DT_LEFT);
-
-
-}
+//
+// Paint Handler
+//
 
 VOID DrawMainWindow(HWND hWnd, HDC hdc)
 {
     SetBkMode(hdc, TRANSPARENT);
+    HideEditControls();
 
     //Draw background, save RECT to rcWindow
     GetClientRect(hWnd, &rcWindow);
     FillRect(hdc, &rcWindow, hbackground);
 
-    //Only one view, for now...
-    Draw_Login(hWnd, hdc);
+
+    if (LOGINVIEW) {
+        Draw_Login(hWnd, hdc);
+    }
+    else if (SETTINGSVIEW) {
+        Draw_Settings(hWnd, hdc);
+    }
+    else {
+        Draw_MainView(hWnd, hdc);
+    }
+
 
 }
 
 
 //
-// Handle Messages
+// Handle Window Messages
 //
 
 VOID MouseClick(POINT pt)
 {
-    if (PtInRect(&rcLoginEnterButtonFrame, pt)) {
-        Login_Commit();
+    if (LOGINVIEW) {
+        if (PtInRect(&rcLoginEnterButtonFrame, pt)) {
+            Login_Commit();
+        }
+    } else if (SETTINGSVIEW) {
+        if (PtInRect(&rctextBack, pt)) {
+            SwitchToMainView();
+        }
+    } else {
+        if (PtInRect(&rctextSettings, pt)) {
+            SwitchToSettings();
+        }
+
     }
 
+
+    ;
+    
 
 }
 
@@ -162,11 +183,11 @@ BOOL InitializeMainWindow(HWND hWnd)
         return FALSE;
     }
 
-    GetEmail();
-
-
     Init_Shared();
     Init_Login(hWnd);
+    Init_Settings(hWnd);
+    Init_MainView(hWnd);
+
 
     
     return TRUE;
