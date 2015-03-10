@@ -14,17 +14,6 @@ BOOL bSettingsView = FALSE;
 #define SETTINGSVIEW    (bUsernameSet && bSettingsView)
 #define NORMALVIEW      (!LOGINVIEW && !SETTINGSVIEW)
 
-VOID SwitchToMainView()
-{
-    bSettingsView = FALSE;
-    InvalidateRect(hwndMain, NULL, TRUE);
-}
-
-VOID SwitchToSettings()
-{
-    bSettingsView = TRUE;
-    InvalidateRect(hwndMain, NULL, TRUE);
-}
 
 HBRUSH hbackground;
 HFONT hFontHeader;
@@ -53,7 +42,6 @@ VOID Init_Shared()
 }
 
 
-
 //
 // Login View (login.cpp)
 //
@@ -79,6 +67,7 @@ extern RECT rctextSettings;
 BOOL Init_Settings(HWND hWnd);
 VOID Draw_Settings(HWND hWnd, HDC hdc);
 extern RECT rctextBack;
+extern RECT rctextResetButton;
 
 
 //
@@ -121,19 +110,21 @@ VOID MouseClick(POINT pt)
         }
     } else if (SETTINGSVIEW) {
         if (PtInRect(&rctextBack, pt)) {
-            SwitchToMainView();
+            //Switch to main view
+            bSettingsView = FALSE;
+            InvalidateRect(hwndMain, NULL, TRUE);
+        }
+        if (PtInRect(&rctextResetButton, pt)) {
+            //Press the reset button
+            ResetDataFiles();
         }
     } else {
         if (PtInRect(&rctextSettings, pt)) {
-            SwitchToSettings();
+            //Switch to settings view
+            bSettingsView = TRUE;
+            InvalidateRect(hwndMain, NULL, TRUE);
         }
-
     }
-
-
-    ;
-    
-
 }
 
 VOID KeyPressed(HWND hWnd, WPARAM wParam)
@@ -188,8 +179,6 @@ BOOL InitializeMainWindow(HWND hWnd)
     Init_Settings(hWnd);
     Init_MainView(hWnd);
 
-
-    
     return TRUE;
 }
 

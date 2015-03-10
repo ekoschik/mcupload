@@ -6,15 +6,14 @@
 #include "Shlwapi.h"
 #include "Windowsx.h"
 #include <string>
+#include <vector>
 
 extern HINSTANCE hInst;
 extern HWND hMainWnd;
 
-//__inline VOID Error(string msg) {
-//    MessageBox(NULL,
-//        _T("GetMonitorInfo failed."), _T("Error"), MB_OK);
-//}
-
+__inline VOID Error(LPWSTR msg) {
+    MessageBox(NULL, msg, _T("Error"), MB_OK);
+}
 
 //window.cpp
 BOOL InitializeMainWindow(HWND hWnd);
@@ -22,6 +21,8 @@ VOID    DrawMainWindow(HWND hwnd, HDC hdc);
 BOOL    MainMenu_HandleWindowMessages(
     HWND, UINT, WPARAM, LPARAM);
 extern WCHAR Username[MAX_PATH];
+extern WCHAR World[MAX_PATH];
+
 extern WCHAR IniFilePath[MAX_PATH];
 extern WCHAR ApplicationDirectoryPath[MAX_PATH];
 extern int window_width;
@@ -38,6 +39,7 @@ LPCWSTR GetWatchedDirectory();
 //upload.cpp
 VOID    InitUpload();
 BOOL    UploadFile(LPCWSTR filepath, LPCWSTR filename);
+extern std::vector<std::string> UploadedFilesList;
 
 //files.cpp
 BOOL    GetScreenshotsDirectoryPath();
@@ -47,6 +49,7 @@ BOOL    SetKey(LPCWSTR key, LPCWSTR val);
 VOID    LoadAlreadyUploaded();
 VOID    MarkUploaded(LPCWSTR lastfile);
 BOOL    IsInUploadedList(LPCWSTR filename);
+VOID    ResetDataFiles();
 std::string ToStr(LPCWSTR in);
 extern BOOL     bUsernameSet;
 extern WCHAR    IniFilePath[MAX_PATH];
@@ -57,14 +60,4 @@ extern WCHAR    ScreenshotDirPath[MAX_PATH];
 std::string base64_encode(
     unsigned char const* bytes_to_encode, 
     unsigned int in_len);
-
-
-
-
-//code example:
-//  https://msdn.microsoft.com/en-us/library/windows/desktop/ms737591%28v=vs.85%29.aspx
-//winsock example:
-//  http://www.tenouk.com/Winsock/Winsock2example.html
-
-
 

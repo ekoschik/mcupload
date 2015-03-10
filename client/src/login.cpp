@@ -22,13 +22,11 @@ WNDPROC OldWorldEditWndProc;
 
 VOID Login_Commit()
 {
-    WCHAR username[MAX_PATH];
-    WCHAR world[MAX_PATH];
-    GetWindowText(hLoginUsernameEditControl, username, MAX_PATH);
-    GetWindowText(hLoginWorldEditControl, world, MAX_PATH);
+    GetWindowText(hLoginUsernameEditControl, Username, MAX_PATH);
+    GetWindowText(hLoginWorldEditControl, World, MAX_PATH);
 
-    SetKey(TEXT("username"), (LPWSTR)&username);
-    SetKey(TEXT("world"), (LPWSTR)&world);
+    SetKey(TEXT("username"), (LPWSTR)&Username);
+    SetKey(TEXT("world"), (LPWSTR)&World);
 
     bUsernameSet = TRUE;
     InvalidateRect(hwndMain, NULL, TRUE);
@@ -68,15 +66,14 @@ INT_PTR CALLBACK EmailEditControlWndProc(
 
 BOOL bUsernameSet;
 WCHAR Username[MAX_PATH];
+WCHAR World[MAX_PATH];
 
 BOOL Init_Login(HWND hWnd)
 {
-    WCHAR username[MAX_PATH];
-    WCHAR world[MAX_PATH];
-    ZeroMemory(&username, MAX_PATH);
-    ZeroMemory(&world, MAX_PATH);
-    bUsernameSet = GetKey(TEXT("username"), (LPWSTR)&username);
-    GetKey(TEXT("world"), (LPWSTR)&world);
+    ZeroMemory(&Username, MAX_PATH);
+    ZeroMemory(&World, MAX_PATH);
+    bUsernameSet = GetKey(TEXT("username"), (LPWSTR)&Username);
+    GetKey(TEXT("world"), (LPWSTR)&World);
 
     //Create edit control and hide them
     hLoginUsernameEditControl = CreateWindow(TEXT("edit"), NULL,

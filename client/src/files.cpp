@@ -3,7 +3,30 @@
 #include "MCuploader.h"
 #include <list>
 #include <fstream>
-#include <vector>
+
+WCHAR   ScreenshotDirPath[MAX_PATH];
+WCHAR   UploadedDataFilePath[MAX_PATH];
+
+
+
+VOID    ResetDataFiles()
+{
+    //Delete data.ini
+    if (!DeleteFile(IniFilePath)) {
+        Error(TEXT("Remove data.iniFailed"));
+    }
+
+    //Delete upload.txt
+    if (!DeleteFile(UploadedDataFilePath)) {
+        Error(TEXT("Remove upload.txt Failed"));
+    }
+
+    bUsernameSet = FALSE;
+
+    InvalidateRect(hMainWnd, NULL, TRUE);
+
+}
+
 
 
 //
@@ -11,25 +34,19 @@
 //  writes to app directory \ uploaded.txt
 //
 
-WCHAR UploadedDataFilePath[MAX_PATH];
-std::vector<std::string> UploadedFilesList;
+std::vector<std::string> AlreadyAttemptedList;
 
 VOID LoadAlreadyUploaded()
 {
     wcscpy((LPWSTR)&UploadedDataFilePath, ApplicationDirectoryPath);
     PathAppend(UploadedDataFilePath, TEXT("\\uploaded.txt"));
 
-    //create file if there isn't one?
-    //WIN32_FIND_DATA fd;
-    //if (FindFirstFile(UploadedDataFilePath, &fd) == NULL) {
-    //    int i = 2;
-    //}
-
     std::ifstream hFile(UploadedDataFilePath);
 
+    AlreadyAttemptedList.clear();
     std::string line;
     while (std::getline(hFile, line))
-        UploadedFilesList.push_back(line);
+        AlreadyAttemptedList.push_back(line);
 }
 
 std::string ToStr(LPCWSTR in)
@@ -45,13 +62,13 @@ VOID MarkUploaded(LPCWSTR filename)
 {
     //add to list
     std::string file = ToStr(filename);
-    UploadedFilesList.push_back(file);
+    AlreadyAttemptedList.push_back(file);
 
     //write to file
     std::ofstream hFile(UploadedDataFilePath);
     CHAR buf[MAX_PATH];
-    for (auto it = UploadedFilesList.begin();
-        it != UploadedFilesList.end(); ++it) {
+    for (auto it = AlreadyAttemptedList.begin();
+        it != AlreadyAttemptedList.end(); ++it) {
 
         ZeroMemory(&buf, MAX_PATH);
         sprintf((char*)&buf, "%s\n", it->c_str());
@@ -64,8 +81,8 @@ BOOL IsInUploadedList(LPCWSTR filename)
 {
     //read file and populate list
     std::string file = ToStr(filename);
-    for (auto it = UploadedFilesList.begin();
-        it != UploadedFilesList.end(); ++it) {
+    for (auto it = AlreadyAttemptedList.begin();
+        it != AlreadyAttemptedList.end(); ++it) {
         if (it->compare(file) == 0) {
             return TRUE;
         }
@@ -139,7 +156,6 @@ BOOL GetKey(LPCWSTR key, LPWSTR out)
 // Getting the \user\.minecraft\screenshots dir path
 //
 
-WCHAR   ScreenshotDirPath[MAX_PATH];
 
 BOOL GetScreenshotsDirectoryPath()
 {

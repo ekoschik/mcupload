@@ -3,10 +3,9 @@
 #include "MCuploader.h"
 #include <list>
 #include <fstream>
-#include <vector>
 #include <string>
 
-std::vector<std::string> SuccessfullyUploadedFiles;
+std::vector<std::string> UploadedFilesList;
 
 VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 {
@@ -17,11 +16,14 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 
     //Upload
     if (UploadFile(filepath, filename)) {
-        SuccessfullyUploadedFiles.push_back(ToStr(filepath));
+        UploadedFilesList.push_back(ToStr(filepath));
     }
 
     //Mark as uploaded to not upload again
     MarkUploaded(filename);
+
+    //Repaint
+    InvalidateRect(hMainWnd, NULL, TRUE);
 }
 
 

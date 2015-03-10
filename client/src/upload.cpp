@@ -7,8 +7,6 @@
 #include <ws2tcpip.h>
 #include <string>
 #include <fstream>
-#include <string>
-#include <vector>
 #include "windows.h"
 #include "stdio.h"
 
@@ -66,6 +64,7 @@ string getHeader(int bodysize)
         RECEIVER, IP, bodysize);
     return string(header);
 }
+
 
 
 BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
