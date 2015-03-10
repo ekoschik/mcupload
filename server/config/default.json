@@ -1,7 +1,32 @@
 {
+  /**
+   * The database configuration. Accepts the same arguments as the
+   * sequelize constructor. See http://sequelize.readthedocs.org/en/latest/api/sequelize/
+   * for more information.
+   * 
+   * "database" can be used to supply the name of the database.
+   * "username" can be used to specify the database username.
+   * "password" can be used to specify the database password.
+   */
   "database": {
     "dialect": "sqlite",
     "storage": "mcupload.db"
   },
+
+  /** The directory where uploaded files will be saved. */
+  "uploadDir": "./uploads",
+
+  /** 
+   * The maximum allowed size of a json payload. This must
+   * be large enough to allow for base64 encoded screenshots
+   * to be uploaded. 
+   */
+  "jsonSizeLimit": "2mb",
+
+
+  /**
+   * The root directory of the minecraft server. Leave null
+   * if this is not running next to a minecraft server.
+   */
   "minecraftDir": null
 }

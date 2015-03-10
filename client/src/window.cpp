@@ -1,13 +1,19 @@
 
 #include "stdafx.h"
 #include "MCuploader.h"
-
 #define IDD_EMAIL    100101
+
+int window_width = 500;
+int window_height = 300;
 
 HWND hwndMain;
 HBRUSH hbackground;
 HFONT hFont;
 
+enum View {
+    Hidden, FirstLaunch, Main, Settings
+};
+View CurrentView;
 
 HWND    hEmailEditControl;
 RECT    rcEdit;
@@ -17,66 +23,20 @@ RECT rcX;
 RECT rcScreemshotDir;
 
 
-
-//
-// Edit Control
-//
-WNDPROC OldEditWndProc;
-INT_PTR CALLBACK EmailEditControlWndProc(
-    _In_  HWND hwndDlg,
-    _In_  UINT uMsg,
-    _In_  WPARAM wParam,
-    _In_  LPARAM lParam)
-{
-    switch (uMsg) {
-
-    //Set email, and repaint on ENTER or TAB
-    case WM_KEYDOWN:
-        if (wParam == VK_RETURN || wParam == VK_TAB) {
-
-            WCHAR tmpbuf[MAX_PATH];
-            if (GetWindowText(hEmailEditControl, tmpbuf, MAX_PATH)) {
-                SetEmail((LPWSTR)&tmpbuf);
-                InvalidateRect(hwndMain, NULL, TRUE);
-            }
-        }
-        break;
-    }
-
-    return OldEditWndProc(hwndDlg, uMsg, wParam, lParam);
-}
-
-BOOL SetupEditControl(HWND hWnd)
-{
-    //Create edit control
-    hEmailEditControl = CreateWindow(TEXT("edit"), NULL,
-        WS_CHILD | WS_VISIBLE | WS_BORDER,
-        0, 0, 0, 0, hWnd, NULL, hInst, NULL);
-    if (hEmailEditControl == NULL) {
-        return FALSE;
-    }
-
-    //Set edit control position
-    SetWindowPos(hEmailEditControl, NULL,
-        rcEdit.left,
-        rcEdit.top,
-        rcEdit.right - rcEdit.left,
-        rcEdit.bottom - rcEdit.top,
-        SWP_SHOWWINDOW);
-    
-    //Subclass edit control to commit on enter/tab
-    OldEditWndProc = 
-        (WNDPROC)SetWindowLongPtr(hEmailEditControl, 
-            GWLP_WNDPROC, (LONG_PTR)EmailEditControlWndProc);
-
-
-    return TRUE;
-}
-
-
 //
 // Paint Handler
 //
+
+VOID Draw_FirstLaunch(HWND hWnd, HDC hdc)
+{
+
+}
+
+VOID Draw_Settings(HWND hWnd, HDC hdc)
+{
+
+}
+
 VOID DrawMainWindow(HWND hWnd, HDC hdc)
 {
     SetBkMode(hdc, TRANSPARENT);
@@ -149,11 +109,11 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
     if (bShowWorkingOnUpload || bShowFinished || bShowFailed) {
         int indicatorheight = 10;
         RECT rcGreenIndicator;
-        SetRect(&rcGreenIndicator, 
-                rcClient.left, 
-                rcClient.bottom - indicatorheight,
-                rcClient.right,
-                rcClient.bottom);
+        SetRect(&rcGreenIndicator,
+            rcClient.left,
+            rcClient.bottom - indicatorheight,
+            rcClient.right,
+            rcClient.bottom);
 
 
         HBRUSH hbr = hbrGreed;
@@ -167,6 +127,58 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 }
 
 
+
+
+
+
+//
+// Handle Messages
+//
+
+VOID MouseClick(POINT pt)
+{
+    //clicking on the [change] invalidates the email address
+    if (PtInRect(&rcX, pt)) {
+        bEmailSet = FALSE;
+        InvalidateRect(hwndMain, NULL, TRUE);
+    }
+
+}
+
+VOID KeyPressed(HWND hWnd, WPARAM wParam)
+{
+    if (wParam == VK_ESCAPE) {
+        DestroyWindow(hWnd);
+    }
+
+}
+
+WNDPROC OldEditWndProc;
+
+INT_PTR CALLBACK EmailEditControlWndProc(
+    _In_  HWND hwndDlg,
+    _In_  UINT uMsg,
+    _In_  WPARAM wParam,
+    _In_  LPARAM lParam)
+{
+    switch (uMsg) {
+
+        //Set email, and repaint on ENTER or TAB
+    case WM_KEYDOWN:
+        if (wParam == VK_RETURN || wParam == VK_TAB) {
+
+            WCHAR tmpbuf[MAX_PATH];
+            if (GetWindowText(hEmailEditControl, tmpbuf, MAX_PATH)) {
+                SetEmail((LPWSTR)&tmpbuf);
+                InvalidateRect(hwndMain, NULL, TRUE);
+            }
+        }
+        break;
+    }
+
+    return OldEditWndProc(hwndDlg, uMsg, wParam, lParam);
+}
+
 BOOL MainMenu_HandleWindowMessages(
     HWND hWnd,
     UINT message,
@@ -174,54 +186,53 @@ BOOL MainMenu_HandleWindowMessages(
     LPARAM lParam)
 {
     switch (message) {
-    
+
     case WM_LBUTTONDOWN:
     {
-        //clicking on the [change] invalidates the email address
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        if (PtInRect(&rcX, pt)) {
-            bEmailSet = FALSE;
-            InvalidateRect(hwndMain, NULL, TRUE);
-        }
+        MouseClick(pt);
         break;
-
     }
 
     case WM_KEYDOWN:
-        if (wParam == VK_ESCAPE) {
-            DestroyWindow(hWnd);
-        }
+        KeyPressed(hWnd, wParam);
+        break;
+
     }
     return TRUE;
 }
 
+//
+// Initialization
+//
 
-//
-// Opening and Closing the Main Window
-//
-VOID OpenMainWindow(HWND hWnd)
+BOOL SetupEditControl(HWND hWnd)
 {
-    hwndMain = hWnd;
-
-    GetEmail();
-
-    if (!SetupEditControl(hWnd)){
-        MessageBox(NULL,
-            _T("Creating Edit Control failed."),
-            _T("Error"), MB_OK);
+    //Create edit control
+    hEmailEditControl = CreateWindow(TEXT("edit"), NULL,
+        WS_CHILD | WS_VISIBLE | WS_BORDER,
+        0, 0, 0, 0, hWnd, NULL, hInst, NULL);
+    if (hEmailEditControl == NULL) {
+        return FALSE;
     }
+
+    //Set edit control position
+    SetWindowPos(hEmailEditControl, NULL,
+        rcEdit.left,
+        rcEdit.top,
+        rcEdit.right - rcEdit.left,
+        rcEdit.bottom - rcEdit.top,
+        SWP_SHOWWINDOW);
+
+    //Subclass edit control to commit on enter/tab
+    OldEditWndProc =
+        (WNDPROC)SetWindowLongPtr(hEmailEditControl,
+        GWLP_WNDPROC, (LONG_PTR)EmailEditControlWndProc);
+
+
+    return TRUE;
 }
-
-VOID CloseMainWindow()
-{
-    
-}
-
-
-//
-// Single time application setup for Main Window
-//
-BOOL InitializeMainWindow()
+BOOL InitializeMainWindow(HWND hWnd)
 {
     //Initialize resources
     hbackground = CreateSolidBrush(RGB(250, 218, 90));
@@ -240,5 +251,41 @@ BOOL InitializeMainWindow()
     SetRect(&rcText, 50, 50, 500, 70);
     SetRect(&rcEdit, 50, 80, 300, 100);
 
+    hwndMain = hWnd;
+
+    GetEmail();
+
+    if (!SetupEditControl(hWnd)){
+        MessageBox(NULL,
+            _T("Creating Edit Control failed."),
+            _T("Error"), MB_OK);
+    }
+
     return TRUE;
 }
+
+
+
+
+
+
+
+
+// =====================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

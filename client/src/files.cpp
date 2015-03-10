@@ -19,6 +19,12 @@ VOID LoadAlreadyUploaded()
     wcscpy((LPWSTR)&UploadedDataFilePath, ApplicationDirectoryPath);
     PathAppend(UploadedDataFilePath, TEXT("\\uploaded.txt"));
 
+    //create file if there isn't one?
+    //WIN32_FIND_DATA fd;
+    //if (FindFirstFile(UploadedDataFilePath, &fd) == NULL) {
+    //    int i = 2;
+    //}
+
     std::ifstream hFile(UploadedDataFilePath);
 
     std::string line;

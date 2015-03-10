@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 
-var express = require('express')
+var express    = require('express')
   , bodyParser = require('body-parser')
-  , multer = require('multer')
-  , path = require('path')
-  , fs = require('fs')
-  , md5 = require('md5')
-  , models = require('./models')
-  , app = express()
+  , multer     = require('multer')
+  , path       = require('path')
+  , fs         = require('fs')
+  , config     = require('config')
+  , models     = require('./models')
+  , app        = express()
   ;
 
 
 var PORT = process.env.PORT || 3000;
 
+app.disable('x-powered-by');
+if (app.get('env') === 'development') {
+    app.set('json spaces', 4);
+}
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -23,20 +27,16 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.use(bodyParser.json({ limit: '2mb' }));
+app.use(bodyParser.json({ limit: config.get('jsonSizeLimit') }));
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ dest: './uploads', inMemory: true }));
+app.use(multer({ dest: config.get('uploadDir'), inMemory: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 function isDirectory(path) {
     return fs.lstatSync(path).isDirectory();
 }
 
-app.use(bodyParser.json({ limit: '2mb' }));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ dest: './uploads', inMemory: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-
+// TODO: this function is really ugly, make it more elegant
 function loadRoutes(base) {
     return (function loadRoutesHelper(dir) {
         fs.readdirSync(dir).forEach(function(file) {
@@ -53,7 +53,8 @@ function loadRoutes(base) {
                 require('./' + routePath)(router, models);
 
                 console.log('using route ' + routeName);
-                app.use(routeName, router);
+                // replace backslash with forward slash, fix for windows
+                app.use(routeName.replace(/\\/g, '/'), router);
             }
         });
     })(base);
@@ -65,6 +66,7 @@ loadRoutes('routes');
 // will print stacktrace
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
+    console.log(err);
     res.status(err.status || 500);
     res.render('error', {
       message: err.message,
@@ -76,6 +78,7 @@ if (app.get('env') === 'development') {
 // production error handler
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
+  console.log(err);
   res.status(err.status || 500);
   res.render('error', {
     message: err.message,
