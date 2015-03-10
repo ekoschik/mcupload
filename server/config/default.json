@@ -13,6 +13,12 @@
     "storage": "mcupload.db"
   },
 
+  /**
+   * The port the server will run on. Can be overridden by specifying
+   * the environment variable "PORT".
+   */
+  "port": 3000,
+
   /** The directory where uploaded files will be saved. */
   "uploadDir": "./uploads",
 

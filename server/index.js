@@ -11,8 +11,6 @@ var express    = require('express')
   ;
 
 
-var PORT = process.env.PORT || 3000;
-
 app.disable('x-powered-by');
 if (app.get('env') === 'development') {
     app.set('json spaces', 4);
@@ -88,7 +86,8 @@ app.use(function(err, req, res, next) {
 
 // sync the database and then start the server
 models.sequelize.sync().then(function() {
-    app.listen(PORT, function() {
-        console.log('Listening on port', PORT);
+    var port = config.get('port');
+    app.listen(port, function() {
+        console.log('Listening on port', port);
     });
 });
