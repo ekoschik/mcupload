@@ -24,11 +24,11 @@ function getPlayerFromFilename(fname) {
 module.exports = function(models) {
     // if the server hasn't been configured with a minecraft directory,
     // then don't bother to start watching for player updates
-    if (!config.has('minecraftDir')) {
+    var minecraftDir = config.get('minecraftDir');
+    if (!minecraftDir) {
         return;
     }
 
-    var minecraftDir = config.get('minecraftDir');
     var playerDir = path.join(minecraftDir, 'world', 'playerdata');
 
     // start by checking each playerdata file agains the database
