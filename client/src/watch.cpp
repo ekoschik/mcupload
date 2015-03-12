@@ -6,6 +6,7 @@
 #include <string>
 
 std::vector<std::string> UploadedFilesList;
+int failedcount = 0;
 
 VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 {
@@ -18,6 +19,9 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
     if (UploadFile(filepath, filename)) {
         UploadedFilesList.push_back(ToStr(filepath));
     }
+    else {
+        failedcount++;
+    }
 
     //Mark as uploaded to not upload again
     MarkUploaded(filename);
@@ -29,6 +33,11 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 
 VOID ProcessDirectoryChange()
 {
+    //If not logged in yet, don't upload anything
+    if (!bUsernameSet) {
+        return;
+    }
+
     WIN32_FIND_DATA fdFile;
     HANDLE hFind = NULL;
     WCHAR sPath[MAX_PATH];
@@ -127,6 +136,7 @@ BOOL StartWatchingDirectory()
     GetScreenshotsDirectoryPath();
 
     LoadAlreadyUploaded();
+
 
     hThread = CreateThread(NULL, 0,
                            WatchDirectory,

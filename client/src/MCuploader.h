@@ -18,8 +18,8 @@ __inline VOID Error(LPWSTR msg) {
 //window.cpp
 BOOL InitializeMainWindow(HWND hWnd);
 VOID    DrawMainWindow(HWND hwnd, HDC hdc);
-BOOL    MainMenu_HandleWindowMessages(
-    HWND, UINT, WPARAM, LPARAM);
+VOID MouseClick(POINT pt);
+VOID KeyPressed(HWND hWnd, WPARAM wParam);
 extern WCHAR Username[MAX_PATH];
 extern WCHAR World[MAX_PATH];
 
@@ -35,6 +35,7 @@ extern HFONT hFontSmall;
 BOOL    StartWatchingDirectory();
 BOOL    StopWatchingDirectory();
 LPCWSTR GetWatchedDirectory();
+VOID    ProcessDirectoryChange();
 
 //upload.cpp
 VOID    InitUpload();
@@ -50,6 +51,7 @@ VOID    LoadAlreadyUploaded();
 VOID    MarkUploaded(LPCWSTR lastfile);
 BOOL    IsInUploadedList(LPCWSTR filename);
 VOID    ResetDataFiles();
+VOID    OpenScreenshotsDirectory();
 std::string ToStr(LPCWSTR in);
 extern BOOL     bUsernameSet;
 extern WCHAR    IniFilePath[MAX_PATH];

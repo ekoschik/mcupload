@@ -22,7 +22,7 @@ HFONT hFontSmall;
 
 VOID Init_Shared()
 {
-    hbackground = CreateSolidBrush(RGB(250, 218, 90));
+    hbackground = CreateSolidBrush(RGB(199, 192, 237));
 
     hFontHeader = CreateFont(25, 0, 0, 0,
         FW_DONTCARE, FALSE, FALSE, FALSE,
@@ -59,6 +59,7 @@ extern RECT rcLoginEnterButtonFrame;
 BOOL Init_MainView(HWND hWnd);
 VOID Draw_MainView(HWND hWnd, HDC hdc);
 extern RECT rctextSettings;
+extern RECT rcScreenshotsDirectoryLink;
 
 //
 // Settings View (settings.cpp)
@@ -124,6 +125,9 @@ VOID MouseClick(POINT pt)
             bSettingsView = TRUE;
             InvalidateRect(hwndMain, NULL, TRUE);
         }
+        if (PtInRect(&rcScreenshotsDirectoryLink, pt)) {
+            OpenScreenshotsDirectory();
+        }
     }
 }
 
@@ -134,32 +138,6 @@ VOID KeyPressed(HWND hWnd, WPARAM wParam)
     }
 
 }
-
-
-
-BOOL MainMenu_HandleWindowMessages(
-    HWND hWnd,
-    UINT message,
-    WPARAM wParam,
-    LPARAM lParam)
-{
-    switch (message) {
-
-    case WM_LBUTTONDOWN:
-    {
-        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        MouseClick(pt);
-        break;
-    }
-
-    case WM_KEYDOWN:
-        KeyPressed(hWnd, wParam);
-        break;
-
-    }
-    return TRUE;
-}
-
 
 
 //

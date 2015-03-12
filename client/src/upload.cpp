@@ -23,6 +23,18 @@ using namespace std;
 #define IP         "localhost"
 #define RECEIVER   "/upload"
 
+string getBody(string username, string filename, string filedata) {
+    string body;
+    body.append("{\"user\":\"");
+    body.append(username.c_str());
+    body.append("\",\"filename\":\"");
+    body.append(filename.c_str());
+    body.append("\",\"filedata\":\"");
+    body.append(filedata.c_str());
+    body.append("\"}");
+    return body;
+}
+
 string getFile(LPCWSTR filepath) 
 {
     std::ifstream input(filepath, std::ios::binary);
@@ -36,18 +48,6 @@ string getFile(LPCWSTR filepath)
         buffer.size());
 
     return filedata64;
-}
-
-string getBody(string username, string filename, string filedata) {
-    string body;
-    body.append("{\"user\":\"");
-    body.append(username.c_str());
-    body.append("\",\"filename\":\"");
-    body.append(filename.c_str());
-    body.append("\",\"filedata\":\"");
-    body.append(filedata.c_str());
-    body.append("\"}");
-    return body;
 }
 
 string getHeader(int bodysize)
@@ -102,13 +102,11 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
     int nDataLength;
     nDataLength = recv(Socket, buffer, 10000, 0);
 
+    //Jank City (...read response code)
     char* retStatus = buffer + 9;
+    BOOL success = (retStatus[0] == '2');
 
-    BOOL success = FALSE;
-    if (retStatus[0] == '2') {
-        success  = TRUE;
-    }
-
+    //Cleanup and return error code
     closesocket(Socket);
     WSACleanup();
     return success;

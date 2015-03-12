@@ -43,6 +43,12 @@ VOID Draw_Settings(HWND hWnd, HDC hdc)
     DrawText(hdc, strReset, wcslen(strReset), &rctextReset, DT_TOP | DT_LEFT);
 
 
+
+    //select screenshots directory
+
+
+
+
 }
 
 

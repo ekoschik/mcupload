@@ -29,6 +29,10 @@ VOID Login_Commit()
     SetKey(TEXT("world"), (LPWSTR)&World);
 
     bUsernameSet = TRUE;
+
+    //Logging in kicks off one directory sweep
+    ProcessDirectoryChange();
+
     InvalidateRect(hwndMain, NULL, TRUE);
 }
 

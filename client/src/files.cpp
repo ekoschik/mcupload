@@ -4,12 +4,11 @@
 #include <list>
 #include <fstream>
 
-WCHAR   ScreenshotDirPath[MAX_PATH];
 WCHAR   UploadedDataFilePath[MAX_PATH];
 
 
 
-VOID    ResetDataFiles()
+VOID ResetDataFiles()
 {
     //Delete data.ini
     if (!DeleteFile(IniFilePath)) {
@@ -17,9 +16,9 @@ VOID    ResetDataFiles()
     }
 
     //Delete upload.txt
-    if (!DeleteFile(UploadedDataFilePath)) {
-        Error(TEXT("Remove upload.txt Failed"));
-    }
+    //if (!DeleteFile(UploadedDataFilePath)) {
+    //    Error(TEXT("Remove upload.txt Failed"));
+    //}
 
     bUsernameSet = FALSE;
 
@@ -153,9 +152,20 @@ BOOL GetKey(LPCWSTR key, LPWSTR out)
 
 
 //
-// Getting the \user\.minecraft\screenshots dir path
+// \user\.minecraft\screenshots
 //
 
+WCHAR   ScreenshotDirPath[MAX_PATH];
+
+VOID OpenScreenshotsDirectory()
+{
+    ShellExecute(NULL, 
+                 TEXT("open"), 
+                 (LPWSTR)&ScreenshotDirPath, 
+                 NULL, 
+                 NULL, 
+                 SW_SHOWDEFAULT);
+}
 
 BOOL GetScreenshotsDirectoryPath()
 {
@@ -171,6 +181,7 @@ BOOL GetScreenshotsDirectoryPath()
     }
 
     PathAppend(ScreenshotDirPath, TEXT("\\.minecraft\\screenshots"));
+    InitCommonControls();
 
     return TRUE;
 }
