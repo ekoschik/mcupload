@@ -7,8 +7,6 @@
 #include <ws2tcpip.h>
 #include <string>
 #include <fstream>
-#include <string>
-#include <vector>
 #include "windows.h"
 #include "stdio.h"
 
@@ -17,18 +15,25 @@ VOID InitUpload()
     
 }
 
-/*
-    Well, this is what seemed to work:
-    http://stackoverflow.com/questions/1011339/how-do-you-make-a-http-request-with-c
-*/
-
-#pragma comment(lib, "Ws2_32.lib")
+//#pragma comment(lib, "Ws2_32.lib")
 
 using namespace std;
 
 #define PORT       3000
 #define IP         "localhost"
 #define RECEIVER   "/upload"
+
+string getBody(string username, string filename, string filedata) {
+    string body;
+    body.append("{\"user\":\"");
+    body.append(username.c_str());
+    body.append("\",\"filename\":\"");
+    body.append(filename.c_str());
+    body.append("\",\"filedata\":\"");
+    body.append(filedata.c_str());
+    body.append("\"}");
+    return body;
+}
 
 string getFile(LPCWSTR filepath) 
 {
@@ -43,18 +48,6 @@ string getFile(LPCWSTR filepath)
         buffer.size());
 
     return filedata64;
-}
-
-string getBody(string email, string filename, string filedata) {
-    string body;
-    body.append("{\"email\":\"");
-    body.append(email.c_str());
-    body.append("\",\"filename\":\"");
-    body.append(filename.c_str());
-    body.append("\",\"filedata\":\"");
-    body.append(filedata.c_str());
-    body.append("\"}");
-    return body;
 }
 
 string getHeader(int bodysize)
@@ -73,14 +66,14 @@ string getHeader(int bodysize)
 }
 
 
-BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
+SOCKET GetSocket() 
 {
     //Setup Connection
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        return FALSE;
+        return NULL;
     }
-    
+
     //socket() and connect()
     SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     struct hostent *host;
@@ -90,12 +83,26 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
     SockAddr.sin_family = AF_INET;
     SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
     if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0){
+        return NULL;
+    }
+
+    return Socket;
+}
+
+BOOL NoServerConnected() {
+    return GetSocket() == NULL;
+}
+
+BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
+{
+    SOCKET Socket = GetSocket();
+    if (Socket == NULL) {
         return FALSE;
     }
 
     //Setup Data To Be Sent
     string filedata = getFile(filepath);
-    string body = getBody(ToStr(Email), ToStr(filename), filedata);
+    string body = getBody(ToStr(Username), ToStr(filename), filedata);
 	string header = getHeader(body.size());
 
     //Send Request
@@ -103,19 +110,19 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
     send(Socket, body.c_str(), body.size(), 0);
 
 
-    //Read response, but for now everything is good
-    //char buffer[10000];
-    //int nDataLength;
-    //while ((nDataLength = recv(Socket, buffer, 10000, 0)) > 0){
-    //    int i = 0;
-    //    while (buffer[i] >= 32 || buffer[i] == '\n' || buffer[i] == '\r') {
-    //        cout << buffer[i];
-    //        i += 1;
-    //    }
-    //}
+    //Read response
+    char buffer[10000] = { };
+    int nDataLength;
+    nDataLength = recv(Socket, buffer, 10000, 0);
+
+    //Jank City (...read response code)
+    char* retStatus = buffer + 9;
+    BOOL success = (retStatus[0] == '2');
+
+    //Cleanup and return error code
     closesocket(Socket);
     WSACleanup();
-    return TRUE;
+    return success;
 }
 
 

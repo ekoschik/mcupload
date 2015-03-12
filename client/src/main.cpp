@@ -14,6 +14,27 @@ TCHAR szApplicationToolTip[MAX_LOADSTRING];
 
 HWND hMainWnd;
 
+RECT rcTargetArea;
+
+
+BOOL bHidden = FALSE;
+VOID Hide() {
+    if (bHidden) return;
+    bHidden = TRUE;
+    ShowWindow(hMainWnd, SW_HIDE);
+}
+VOID Show()
+{
+    if (!bHidden) return;
+    bHidden = FALSE;
+    ShowWindow(hMainWnd, SW_SHOW);
+}
+VOID ToggleShowHide() 
+{
+    if (bHidden) Show(); else Hide();
+}
+
+POINT lp;
 
 LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
                                  UINT message,
@@ -34,18 +55,39 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         EndPaint(hWnd, &ps);
         break;
     }
+    
+    case WM_LBUTTONDOWN:
+    {
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        MouseClick(pt);
+
+        //ToggleShowHide();
+
+        break;
+    }
+
+    case WM_KEYDOWN:
+        KeyPressed(hWnd, wParam);
+        break;
+
+    case WM_KILLFOCUS:
+    {
+        Hide();
+        break;
+    }
+        
+    case WM_MOUSEMOVE:
+    {
+
+        break;
+    }
 
     case WM_DESTROY:
         break;
     
     }
 
-    //All other messages are handled in window.cpp
-    if (MainMenu_HandleWindowMessages(hWnd, message, wParam, lParam)) {
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-
-    return 0;
+    return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 RECT GetClickPointMonitorRect()
@@ -80,20 +122,28 @@ VOID CreateMainWindow(HWND hWndParent)
     wcex.hInstance = hInst;
     wcex.hIcon = NULL;
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.hbrBackground = (HBRUSH)GetStockObject(COLOR_WINDOW + 1);
     wcex.lpszMenuName = NULL;
     wcex.lpszClassName = wndclass;
     wcex.hIconSm = NULL;
     RegisterClassEx(&wcex);
 
     //Setup Window Work Area
-    RECT rcwork = GetClickPointMonitorRect();
+    RECT rcMon = GetClickPointMonitorRect();
+    RECT rcwork;
+    CopyRect(&rcwork, &rcMon);
     rcwork.top = rcwork.bottom - window_height;
     rcwork.left = rcwork.right - window_width;
     rcwork.top -= 5;
     rcwork.left -= 5;
     rcwork.right -= 5;
     rcwork.bottom -= 5;
+
+    //for knowing if the cursor is in the bottom right corner
+    CopyRect(&rcTargetArea, &rcwork);
+    rcTargetArea.bottom = rcMon.bottom;
+    rcTargetArea.right = rcMon.right;
+
 
     //Create Window
     hMainWnd = CreateWindow(
@@ -105,7 +155,9 @@ VOID CreateMainWindow(HWND hWndParent)
         rcwork.bottom - rcwork.top,
         hWndParent, NULL, hInst, NULL);
     
-    ShowWindow(hMainWnd, SW_SHOW);
+    //Show Window
+    Show();
+
     SetActiveWindow(hMainWnd);
     SetWindowPos(hMainWnd, HWND_TOPMOST, 0,0,0,0,
         SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE);
@@ -157,12 +209,13 @@ LRESULT CALLBACK WndProc(HWND hWnd,
         switch (LOWORD(lParam))  {
         case WM_LBUTTONDOWN:
         {
-            //toggle showing the window
-            static bool bShow = FALSE;
-            bShow = !bShow;
-            ShowWindow(hMainWnd, bShow ? SW_SHOW : SW_FORCEMINIMIZE);
-            return TRUE;
+
+            ToggleShowHide();
+            if (!bHidden) {
+                SetFocus(hMainWnd);
+            }
         }
+        break;
 
         //right click shows the popup menu
         case WM_RBUTTONDOWN:
@@ -250,8 +303,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         MAKEINTRESOURCE(IDC_MCUPLOADICON));
 
     hInst = hInstance;
-
-    hMainWnd = NULL;
 
     InitUpload();
 

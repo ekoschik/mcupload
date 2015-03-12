@@ -3,146 +3,132 @@
 #include "MCuploader.h"
 #define IDD_EMAIL    100101
 
-int window_width = 500;
-int window_height = 300;
+int window_width = 400;
+int window_height = 250;
 
 HWND hwndMain;
+RECT rcWindow;
+BOOL bSettingsView = FALSE;
+
+#define LOGINVIEW       (!bUsernameSet)
+#define SETTINGSVIEW    (bUsernameSet && bSettingsView)
+#define NORMALVIEW      (!LOGINVIEW && !SETTINGSVIEW)
+
+
 HBRUSH hbackground;
-HFONT hFont;
+HFONT hFontHeader;
+HFONT hFontNormal;
+HFONT hFontSmall;
 
-enum View {
-    Hidden, FirstLaunch, Main, Settings
-};
-View CurrentView;
+VOID Init_Shared()
+{
+    hbackground = CreateSolidBrush(RGB(199, 192, 237));
 
-HWND    hEmailEditControl;
-RECT    rcEdit;
+    hFontHeader = CreateFont(25, 0, 0, 0,
+        FW_DONTCARE, FALSE, FALSE, FALSE,
+        0, 0, 0, 0, 0,
+        TEXT("Times New Roman"));
 
-RECT rcText;
-RECT rcX;
-RECT rcScreemshotDir;
+    hFontNormal = CreateFont(20, 0, 0, 0,
+        FW_DONTCARE, FALSE, FALSE, FALSE,
+        0, 0, 0, 0, 0,
+        TEXT("Times New Roman"));
+
+    hFontSmall = CreateFont(15, 0, 0, 0,
+        FW_DONTCARE, FALSE, FALSE, FALSE,
+        0, 0, 0, 0, 0,
+        TEXT("Times New Roman"));
+
+}
+
+
+//
+// Login View (login.cpp)
+//
+
+BOOL Init_Login(HWND hWnd);
+VOID Draw_Login(HWND hWnd, HDC hdc);
+VOID Login_Commit();
+VOID HideEditControls();
+extern RECT rcLoginEnterButtonFrame;
+
+//
+// Main View (mainview.cpp)
+//
+
+BOOL Init_MainView(HWND hWnd);
+VOID Draw_MainView(HWND hWnd, HDC hdc);
+extern RECT rctextSettings;
+extern RECT rcScreenshotsDirectoryLink;
+
+//
+// Settings View (settings.cpp)
+//
+
+BOOL Init_Settings(HWND hWnd);
+VOID Draw_Settings(HWND hWnd, HDC hdc);
+extern RECT rctextBack;
+extern RECT rctextResetButton;
 
 
 //
 // Paint Handler
 //
 
-VOID Draw_FirstLaunch(HWND hWnd, HDC hdc)
-{
-
-}
-
-VOID Draw_Settings(HWND hWnd, HDC hdc)
-{
-
-}
-
 VOID DrawMainWindow(HWND hWnd, HDC hdc)
 {
     SetBkMode(hdc, TRANSPARENT);
-    SelectObject(hdc, hFont);
+    HideEditControls();
 
-    //Hide the edit control by default
-    ShowWindow(hEmailEditControl, SW_HIDE);
-
-    //Draw background
-    RECT rcClient;
-    GetClientRect(hWnd, &rcClient);
-    FillRect(hdc, &rcClient, hbackground);
+    //Draw background, save RECT to rcWindow
+    GetClientRect(hWnd, &rcWindow);
+    FillRect(hdc, &rcWindow, hbackground);
 
 
-    if (bEmailSet) {
-
-        //Draw Email Value
-        WCHAR StrBuf[MAX_PATH];
-        ZeroMemory(&StrBuf, sizeof(StrBuf));
-        swprintf((LPWSTR)&StrBuf, TEXT("email: %s"), Email);
-        DrawText(hdc, (LPWSTR)&StrBuf, wcslen(StrBuf), &rcText, DT_TOP | DT_LEFT);
-
-        //Draw [change] area
-        int x = rcText.left + 20;
-        int y = rcText.top + 20;
-        SetRect(&rcX, x, y, x + 63, y + 23);
-        ZeroMemory(&StrBuf, sizeof(StrBuf));
-        swprintf((LPWSTR)&StrBuf, TEXT("[change]"));
-        DrawText(hdc, (LPWSTR)&StrBuf, wcslen(StrBuf), &rcX, DT_TOP | DT_LEFT);
-
-        //Draw Screenshots Directory
-        SetRect(&rcScreemshotDir, rcText.left,
-            y + 40, rcText.left + wcslen(ScreenshotDirPath) * 10, y + 60);
-        DrawText(hdc, ScreenshotDirPath,
-            wcslen(ScreenshotDirPath), &rcScreemshotDir, DT_TOP | DT_LEFT);
-
+    if (LOGINVIEW) {
+        Draw_Login(hWnd, hdc);
+    }
+    else if (SETTINGSVIEW) {
+        Draw_Settings(hWnd, hdc);
     }
     else {
-
-        //Draw Text
-        LPWSTR str = TEXT("We need your email: (enter to save)");
-        DrawText(hdc, str, wcslen(str), &rcText, DT_TOP | DT_LEFT);
-
-        //Show email entry dialog box
-        SetWindowPos(hEmailEditControl, NULL,
-            rcEdit.left,
-            rcEdit.top,
-            rcEdit.right - rcEdit.left,
-            rcEdit.bottom - rcEdit.top,
-            SWP_SHOWWINDOW);
-
-        SetFocus(hEmailEditControl);
-
-    }
-
-
-
-    BOOL bShowWorkingOnUpload = FALSE;
-    BOOL bShowFinished = FALSE;
-    BOOL bShowFailed = FALSE;
-
-
-
-
-
-    static HBRUSH hbrOrange = CreateSolidBrush(RGB(255, 187, 0));
-    static HBRUSH hbrRed = CreateSolidBrush(RGB(255, 0, 0));
-    static HBRUSH hbrGreed = CreateSolidBrush(RGB(0, 255, 0));
-
-    if (bShowWorkingOnUpload || bShowFinished || bShowFailed) {
-        int indicatorheight = 10;
-        RECT rcGreenIndicator;
-        SetRect(&rcGreenIndicator,
-            rcClient.left,
-            rcClient.bottom - indicatorheight,
-            rcClient.right,
-            rcClient.bottom);
-
-
-        HBRUSH hbr = hbrGreed;
-        //if (bShowWhbrGreedorkingOnUpload) {
-        //    hbr = hbrOrange;
-        //}
-        FillRect(hdc, &rcGreenIndicator, hbr);
+        Draw_MainView(hWnd, hdc);
     }
 
 
 }
 
 
-
-
-
-
 //
-// Handle Messages
+// Handle Window Messages
 //
 
 VOID MouseClick(POINT pt)
 {
-    //clicking on the [change] invalidates the email address
-    if (PtInRect(&rcX, pt)) {
-        bEmailSet = FALSE;
-        InvalidateRect(hwndMain, NULL, TRUE);
+    if (LOGINVIEW) {
+        if (PtInRect(&rcLoginEnterButtonFrame, pt)) {
+            Login_Commit();
+        }
+    } else if (SETTINGSVIEW) {
+        if (PtInRect(&rctextBack, pt)) {
+            //Switch to main view
+            bSettingsView = FALSE;
+            InvalidateRect(hwndMain, NULL, TRUE);
+        }
+        if (PtInRect(&rctextResetButton, pt)) {
+            //Press the reset button
+            ResetDataFiles();
+        }
+    } else {
+        if (PtInRect(&rctextSettings, pt)) {
+            //Switch to settings view
+            bSettingsView = TRUE;
+            InvalidateRect(hwndMain, NULL, TRUE);
+        }
+        if (PtInRect(&rcScreenshotsDirectoryLink, pt)) {
+            OpenScreenshotsDirectory();
+        }
     }
-
 }
 
 VOID KeyPressed(HWND hWnd, WPARAM wParam)
@@ -153,139 +139,24 @@ VOID KeyPressed(HWND hWnd, WPARAM wParam)
 
 }
 
-WNDPROC OldEditWndProc;
-
-INT_PTR CALLBACK EmailEditControlWndProc(
-    _In_  HWND hwndDlg,
-    _In_  UINT uMsg,
-    _In_  WPARAM wParam,
-    _In_  LPARAM lParam)
-{
-    switch (uMsg) {
-
-        //Set email, and repaint on ENTER or TAB
-    case WM_KEYDOWN:
-        if (wParam == VK_RETURN || wParam == VK_TAB) {
-
-            WCHAR tmpbuf[MAX_PATH];
-            if (GetWindowText(hEmailEditControl, tmpbuf, MAX_PATH)) {
-                SetEmail((LPWSTR)&tmpbuf);
-                InvalidateRect(hwndMain, NULL, TRUE);
-            }
-        }
-        break;
-    }
-
-    return OldEditWndProc(hwndDlg, uMsg, wParam, lParam);
-}
-
-BOOL MainMenu_HandleWindowMessages(
-    HWND hWnd,
-    UINT message,
-    WPARAM wParam,
-    LPARAM lParam)
-{
-    switch (message) {
-
-    case WM_LBUTTONDOWN:
-    {
-        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        MouseClick(pt);
-        break;
-    }
-
-    case WM_KEYDOWN:
-        KeyPressed(hWnd, wParam);
-        break;
-
-    }
-    return TRUE;
-}
 
 //
 // Initialization
 //
 
-BOOL SetupEditControl(HWND hWnd)
-{
-    //Create edit control
-    hEmailEditControl = CreateWindow(TEXT("edit"), NULL,
-        WS_CHILD | WS_VISIBLE | WS_BORDER,
-        0, 0, 0, 0, hWnd, NULL, hInst, NULL);
-    if (hEmailEditControl == NULL) {
-        return FALSE;
-    }
-
-    //Set edit control position
-    SetWindowPos(hEmailEditControl, NULL,
-        rcEdit.left,
-        rcEdit.top,
-        rcEdit.right - rcEdit.left,
-        rcEdit.bottom - rcEdit.top,
-        SWP_SHOWWINDOW);
-
-    //Subclass edit control to commit on enter/tab
-    OldEditWndProc =
-        (WNDPROC)SetWindowLongPtr(hEmailEditControl,
-        GWLP_WNDPROC, (LONG_PTR)EmailEditControlWndProc);
-
-
-    return TRUE;
-}
 BOOL InitializeMainWindow(HWND hWnd)
 {
-    //Initialize resources
-    hbackground = CreateSolidBrush(RGB(250, 218, 90));
-    hFont = CreateFont(20, 0, 0, 0,
-        FW_DONTCARE, FALSE, FALSE, FALSE,
-        0, 0, 0, 0, 0,
-        TEXT("Times New Roman"));
-
-    //Initialize file path
+    hwndMain = hWnd;
+    
     if (!InitDataFile()) {
         return FALSE;
     }
 
-
-    //Initialize layout rects
-    SetRect(&rcText, 50, 50, 500, 70);
-    SetRect(&rcEdit, 50, 80, 300, 100);
-
-    hwndMain = hWnd;
-
-    GetEmail();
-
-    if (!SetupEditControl(hWnd)){
-        MessageBox(NULL,
-            _T("Creating Edit Control failed."),
-            _T("Error"), MB_OK);
-    }
+    Init_Shared();
+    Init_Login(hWnd);
+    Init_Settings(hWnd);
+    Init_MainView(hWnd);
 
     return TRUE;
 }
-
-
-
-
-
-
-
-
-// =====================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

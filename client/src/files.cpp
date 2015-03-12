@@ -3,7 +3,29 @@
 #include "MCuploader.h"
 #include <list>
 #include <fstream>
-#include <vector>
+
+WCHAR   UploadedDataFilePath[MAX_PATH];
+
+
+
+VOID ResetDataFiles()
+{
+    //Delete data.ini
+    if (!DeleteFile(IniFilePath)) {
+        Error(TEXT("Remove data.iniFailed"));
+    }
+
+    //Delete upload.txt
+    //if (!DeleteFile(UploadedDataFilePath)) {
+    //    Error(TEXT("Remove upload.txt Failed"));
+    //}
+
+    bUsernameSet = FALSE;
+
+    InvalidateRect(hMainWnd, NULL, TRUE);
+
+}
+
 
 
 //
@@ -11,25 +33,19 @@
 //  writes to app directory \ uploaded.txt
 //
 
-WCHAR UploadedDataFilePath[MAX_PATH];
-std::vector<std::string> UploadedFilesList;
+std::vector<std::string> AlreadyAttemptedList;
 
 VOID LoadAlreadyUploaded()
 {
     wcscpy((LPWSTR)&UploadedDataFilePath, ApplicationDirectoryPath);
     PathAppend(UploadedDataFilePath, TEXT("\\uploaded.txt"));
 
-    //create file if there isn't one?
-    //WIN32_FIND_DATA fd;
-    //if (FindFirstFile(UploadedDataFilePath, &fd) == NULL) {
-    //    int i = 2;
-    //}
-
     std::ifstream hFile(UploadedDataFilePath);
 
+    AlreadyAttemptedList.clear();
     std::string line;
     while (std::getline(hFile, line))
-        UploadedFilesList.push_back(line);
+        AlreadyAttemptedList.push_back(line);
 }
 
 std::string ToStr(LPCWSTR in)
@@ -45,13 +61,13 @@ VOID MarkUploaded(LPCWSTR filename)
 {
     //add to list
     std::string file = ToStr(filename);
-    UploadedFilesList.push_back(file);
+    AlreadyAttemptedList.push_back(file);
 
     //write to file
     std::ofstream hFile(UploadedDataFilePath);
     CHAR buf[MAX_PATH];
-    for (auto it = UploadedFilesList.begin();
-        it != UploadedFilesList.end(); ++it) {
+    for (auto it = AlreadyAttemptedList.begin();
+        it != AlreadyAttemptedList.end(); ++it) {
 
         ZeroMemory(&buf, MAX_PATH);
         sprintf((char*)&buf, "%s\n", it->c_str());
@@ -64,8 +80,8 @@ BOOL IsInUploadedList(LPCWSTR filename)
 {
     //read file and populate list
     std::string file = ToStr(filename);
-    for (auto it = UploadedFilesList.begin();
-        it != UploadedFilesList.end(); ++it) {
+    for (auto it = AlreadyAttemptedList.begin();
+        it != AlreadyAttemptedList.end(); ++it) {
         if (it->compare(file) == 0) {
             return TRUE;
         }
@@ -136,37 +152,20 @@ BOOL GetKey(LPCWSTR key, LPWSTR out)
 
 
 //
-//  Email and bEmailSet
-//
-
-WCHAR   Email[MAX_PATH];
-BOOL    bEmailSet;  //false before user enters an email
-
-BOOL GetEmail()
-{
-    WCHAR email[MAX_PATH];
-    ZeroMemory(&email, MAX_PATH);
-    bEmailSet = GetKey(TEXT("email"), (LPWSTR)&email);
-    if (bEmailSet) {
-        wcscpy((LPWSTR)&Email, email);
-    }
-    return bEmailSet;
-}
-
-VOID SetEmail(LPWSTR email)
-{
-    bEmailSet = SetKey(TEXT("email"), email);
-    if (bEmailSet) {
-        wcscpy((LPWSTR)&Email, email);
-    }
-}
-
-
-//
-// Getting the \user\.minecraft\screenshots dir path
+// \user\.minecraft\screenshots
 //
 
 WCHAR   ScreenshotDirPath[MAX_PATH];
+
+VOID OpenScreenshotsDirectory()
+{
+    ShellExecute(NULL, 
+                 TEXT("open"), 
+                 (LPWSTR)&ScreenshotDirPath, 
+                 NULL, 
+                 NULL, 
+                 SW_SHOWDEFAULT);
+}
 
 BOOL GetScreenshotsDirectoryPath()
 {
@@ -182,6 +181,7 @@ BOOL GetScreenshotsDirectoryPath()
     }
 
     PathAppend(ScreenshotDirPath, TEXT("\\.minecraft\\screenshots"));
+    InitCommonControls();
 
     return TRUE;
 }
