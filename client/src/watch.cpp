@@ -10,30 +10,24 @@ int failedcount = 0;
 
 VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 {
-    //Skip files that have already been uploaded
-    if (IsInUploadedList(filename)) {
+    if (NoServerConnected() || IsInUploadedList(filename)) {
         return;
     }
 
-    //Upload
     if (UploadFile(filepath, filename)) {
         UploadedFilesList.push_back(ToStr(filepath));
+        MarkUploaded(filename);
     }
     else {
         failedcount++;
     }
 
-    //Mark as uploaded to not upload again
-    MarkUploaded(filename);
-
-    //Repaint
     InvalidateRect(hMainWnd, NULL, TRUE);
 }
 
 
 VOID ProcessDirectoryChange()
 {
-    //If not logged in yet, don't upload anything
     if (!bUsernameSet) {
         return;
     }

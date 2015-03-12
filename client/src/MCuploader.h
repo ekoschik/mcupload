@@ -41,6 +41,7 @@ VOID    ProcessDirectoryChange();
 VOID    InitUpload();
 BOOL    UploadFile(LPCWSTR filepath, LPCWSTR filename);
 extern std::vector<std::string> UploadedFilesList;
+BOOL    NoServerConnected();
 
 //files.cpp
 BOOL    GetScreenshotsDirectoryPath();

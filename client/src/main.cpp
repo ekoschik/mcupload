@@ -211,6 +211,9 @@ LRESULT CALLBACK WndProc(HWND hWnd,
         {
 
             ToggleShowHide();
+            if (!bHidden) {
+                SetFocus(hMainWnd);
+            }
         }
         break;
 
