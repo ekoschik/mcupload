@@ -45,7 +45,7 @@ var mojang = {
     },
 
     MojangError: MojangError
-}
+};
 
 module.exports = mojang;
 

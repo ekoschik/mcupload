@@ -27,7 +27,7 @@ var validate = {
     },
 
     ValidationError: ValidationError
-}
+};
 
 module.exports = validate;
 

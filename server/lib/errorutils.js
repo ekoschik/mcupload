@@ -6,11 +6,11 @@ var errorUtils = {
             this.message = message;
             this.name = name;
             Error.captureStackTrace(this, error);
-        }
+        };
         error.prototype = Object.create(Error.prototype);
         error.prototype.constructor = error;
         return error;
     }
-}
+};
 
 module.exports = errorUtils;

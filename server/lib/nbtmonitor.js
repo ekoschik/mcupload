@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-var fs = require('fs')
-  , nbt = require('nbt')
+var Promise = require('bluebird')
+  , fs = Promise.promisifyAll(require('fs'))
+  , nbt = Promise.promisifyAll(require('nbt'))
   , jdp = require('jsondiffpatch')
   , path = require('path')
   , events = require('events')
@@ -9,22 +10,16 @@ var fs = require('fs')
   ;
 
 /** @const */
-var EXTENSIONS = ['dat', 'mca']
+var EXTENSIONS = ['dat', 'mca'];
 
 /**
  * Parse the NBT file {@code fname}
  * @param {string} fname The name of the NBT file to parse.
- * @param {function(exception, object)} callback
+ * @return {Promise} A promise representing the contents of the NBT file.
  */
-function parseNBT(fname, callback) {
-    fs.readFile(fname, function(err, data) {
-        if (err) {
-            callback(err);
-            return;
-        }
-        nbt.parse(data, function(err, result) {
-            callback(err, result);
-        });
+function parseNBT(fname) {
+    return fs.readFileAsync(fname).then(function(data) {
+        return nbt.parseAsync(data);
     });
 }
 
@@ -46,14 +41,14 @@ function NBTFile(fname, emitter) {
 
     console.log('new nbtfile ' + fname);
 
-    parseNBT(self.fname, function(err, data) {
-        if (err) throw err;
+    parseNBT(self.fname).then(function(data) {
         self.data = data;
-        //console.log(data);
         self.emitter.emit('load', {
-            file: self.cleanName,
+            file: self.fname,
             data: data
         });
+    }).catch(function(e) {
+        console.log('Failed to parse NBT file "' + self.fname + '": ' + e);
     });
 }
 
@@ -68,9 +63,8 @@ NBTFile.prototype.update = function() {
     console.log(self.fname, "updated after", now - self.lastUpdated, "milliseconds");
     self.lastUpdated = now;
 
-    parseNBT(self.fname, function(err, data) {
+    parseNBT(self.fname).then(function(data) {
         var delta = jdp.diff(self.data, data);
-        //console.log(delta);
         self.emitter.emit('update-delta', {
             file: self.fname,
             data: delta
@@ -80,6 +74,8 @@ NBTFile.prototype.update = function() {
             data: data
         });
         self.data = data;
+    }).catch(function(e) {
+        console.log('Failed to parse NBT file "' + self.fname + '": ' + e);
     });
 };
 
@@ -101,7 +97,7 @@ function NBTMonitor(dir) {
     self.initializeFiles();
 
     // set up a watch on the directory
-    fs.watch(dir, function (event, fname) {
+    fs.watch(dir, function(event, fname) {
         console.log('event: ' + event + ', file: ' + fname);
         if (!validFormat(fname)) return;
 
@@ -121,24 +117,24 @@ util.inherits(NBTMonitor, events.EventEmitter);
  */
 NBTMonitor.prototype.initializeFiles = function() {
     var self = this;
-    fs.readdir(self.dir, function(err, files) {
-        if (err) throw err;
-
+    fs.readdirAsync(self.dir).then(function(files) {
         console.log("Found files in" + self.dir + ": " + files.join(', '));
         files.forEach(function(fname) {
             self.newFile(path.join(self.dir, fname));
         });
+    }).catch(function(e) {
+        console.log('Failed to read the specified watch directory "' + self.dir + '": ' + e);
     });
-}
+};
 
 /**
  * Start monitoring the file given by {@code fname}.
  * @param  {String} fname The absolute path of the file to watch.
  */
 NBTMonitor.prototype.newFile = function(fname) {
-    var scope = this;
-    if (!(fname in scope.files)) {
-        scope.files[fname] = new NBTFile(fname, this);
+    var self = this;
+    if (!(fname in self.files)) {
+        self.files[fname] = new NBTFile(fname, this);
     }
 };
 
@@ -149,13 +145,13 @@ NBTMonitor.prototype.newFile = function(fname) {
  * @return {[type]}
  */
 NBTMonitor.prototype.updateFile = function(fname) {
-    var scope = this;
-    if (fname in scope.files) {
-        scope.files[fname].update();
+    var self = this;
+    if (fname in self.files) {
+        self.files[fname].update();
     } else {
-        scope.newFile(fname);
+        self.newFile(fname);
     }
-}
+};
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // @@  Utilities  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -164,13 +160,14 @@ NBTMonitor.prototype.updateFile = function(fname) {
 /**
  * Checks to see if the path {@code fname} ends with an extension
  * we want to watch.
+ * TODO: This function is kind of a hack. Figure out a better way
  * @param  {string} fname The path to check.
  * @return {boolean} Whether we should watch this file or not.
  */
 function validFormat(fname) {
     var ext = fname.split('.').slice(-1);
     return EXTENSIONS.some(function(val) {
-        return val == ext;
+        return val == ext; // triple equals doesn't seem to work here
     });
 }
 

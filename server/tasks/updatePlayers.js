@@ -83,7 +83,7 @@ module.exports = function(models) {
     }).catch(function(e) {
         console.log(e);
     });
-}
+};
 
 if (require.main === module) {
     module.exports(require('../models'));

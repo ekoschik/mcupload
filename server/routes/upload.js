@@ -2,6 +2,7 @@
 
 var Promise   = require('bluebird')
   , fs        = Promise.promisifyAll(require('fs'))
+  , _         = require('lodash')
   , path      = require('path')
   , crypto    = require('crypto')
   , md5       = require('MD5')
@@ -27,7 +28,11 @@ module.exports = function(router, models) {
 
     router.post('/', function(req, res) {
         // TODO: make sure a file was uploaded or a url was given, and a username is given.
-        log(req.body);
+        var logBody = _.clone(req.body);
+        if (logBody.filedata) {
+          logBody.filedata = logBody.filedata.length > 40 ? logBody.filedata.substr(0, 40) + '...' : logBody.filedata;
+        }
+        log(logBody);
         log(req.files);
 
         var buffer, filename;
