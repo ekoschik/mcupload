@@ -19,12 +19,14 @@ module.exports = function(router, models) {
     router.get('/:id', function(req, res) {
         var id = req.params.id;
         res.sendFile(id, { root: uploadDir }, function(e) {
-            var status = e.status;
-            var message = {
-                403: 'Forbidden',
-                404: 'File "' + id + '" was not found.'
-            }[status];
-            res.status(status).json({ status: status, error: message });
+            if (e) {
+                var status = e.status;
+                var message = {
+                    403: 'Forbidden',
+                    404: 'File "' + id + '" was not found.'
+                }[status];
+                res.status(status).json({ status: status, error: message });
+            }
         });
-    })
-}
+    });
+};
