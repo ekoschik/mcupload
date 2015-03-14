@@ -5,6 +5,8 @@
 #include "Shlobj.h"
 #include "Shlwapi.h"
 #include "Windowsx.h"
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <string>
 #include <vector>
 
@@ -39,19 +41,28 @@ VOID    ProcessDirectoryChange();
 
 //upload.cpp
 VOID    InitUpload();
-BOOL    UploadFile(LPCWSTR filepath, LPCWSTR filename);
+BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket);
 extern std::vector<std::string> UploadedFilesList;
-BOOL    NoServerConnected();
+SOCKET GetSocket();
 
-//files.cpp
+//uploadlists.cpp
+VOID    InitUploadLists();
+BOOL    IsFilenameInIgnoreList(LPCWSTR filename);
+BOOL    IsFilenameInSuccessList(LPCWSTR filename);
+BOOL    IsFilenameInFailedList(LPCWSTR filename);
+VOID    AddFileToPendingList(LPCWSTR filename);
+VOID    AddFileToSuccessList(LPCWSTR filename);
+VOID    AddFileToFailedList(LPCWSTR filename);
+VOID    AddFileToIgnoreList(LPCWSTR filename);
+int GetNumFailed();
+int GetNumSuccess();
+
+//dataini.cpp
 BOOL    GetScreenshotsDirectoryPath();
 BOOL    InitDataFile();
 BOOL    GetKey(LPCWSTR key, LPWSTR out);
 BOOL    SetKey(LPCWSTR key, LPCWSTR val);
-VOID    LoadAlreadyUploaded();
-VOID    MarkUploaded(LPCWSTR lastfile);
-BOOL    IsInUploadedList(LPCWSTR filename);
-VOID    ResetDataFiles();
+VOID    ResetDataIni();
 VOID    OpenScreenshotsDirectory();
 std::string ToStr(LPCWSTR in);
 extern BOOL     bUsernameSet;
@@ -64,3 +75,12 @@ std::string base64_encode(
     unsigned char const* bytes_to_encode, 
     unsigned int in_len);
 
+__inline std::string ToStr(LPCWSTR in)
+{
+#define RandomBufSize 1000
+    CHAR buf[RandomBufSize];
+    ZeroMemory(&buf, RandomBufSize);
+    wcstombs((char*)&buf, in, wcslen(in));
+    std::string out = buf;
+    return out;
+}

@@ -24,9 +24,6 @@
     <ClCompile Include="upload.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="files.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -43,6 +40,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="uploadlists.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dataini.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

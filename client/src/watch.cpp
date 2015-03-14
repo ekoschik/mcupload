@@ -10,16 +10,25 @@ int failedcount = 0;
 
 VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 {
-    if (NoServerConnected() || IsInUploadedList(filename)) {
+    if (IsFilenameInIgnoreList(filename) ||
+        IsFilenameInFailedList(filename)) {
         return;
     }
 
-    if (UploadFile(filepath, filename)) {
-        UploadedFilesList.push_back(ToStr(filepath));
-        MarkUploaded(filename);
+    SOCKET Socket = GetSocket();
+    if (Socket == NULL) {
+        AddFileToPendingList(filename);
+        return;
     }
-    else {
-        failedcount++;
+
+    if (IsFilenameInSuccessList(filename)) {
+        return;
+    }
+
+    if (UploadFile(filepath, filename, Socket)) {
+        AddFileToSuccessList(filename);
+    } else {
+        AddFileToFailedList(filename);
     }
 
     InvalidateRect(hMainWnd, NULL, TRUE);
@@ -117,6 +126,44 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
 }
 
 
+
+//
+// \user\.minecraft\screenshots
+//
+
+WCHAR   ScreenshotDirPath[MAX_PATH];
+
+VOID OpenScreenshotsDirectory()
+{
+    ShellExecute(NULL,
+        TEXT("open"),
+        (LPWSTR)&ScreenshotDirPath,
+        NULL,
+        NULL,
+        SW_SHOWDEFAULT);
+}
+
+BOOL GetScreenshotsDirectoryPath()
+{
+    if (FAILED(SHGetFolderPath(NULL,
+        CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+        NULL, 0, ScreenshotDirPath))) {
+
+        //couldn't get root path
+        MessageBox(NULL,
+            _T("SHGetFolderPath failed."),
+            _T("Error"), MB_OK);
+        return FALSE;
+    }
+
+    PathAppend(ScreenshotDirPath, TEXT("\\.minecraft\\screenshots"));
+    InitCommonControls();
+
+    return TRUE;
+}
+
+
+
 //
 // Start and Stop the worker thread for 
 // watching the screenshots directory
@@ -129,8 +176,7 @@ BOOL StartWatchingDirectory()
 {
     GetScreenshotsDirectoryPath();
 
-    LoadAlreadyUploaded();
-
+    InitUploadLists();
 
     hThread = CreateThread(NULL, 0,
                            WatchDirectory,

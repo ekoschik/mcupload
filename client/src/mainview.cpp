@@ -56,7 +56,7 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     //counter for number of successfully uploaded screenshots
     int numuploaded = UploadedFilesList.size();
     WCHAR strSizeCounter[100];
-    wsprintf((LPWSTR)&strSizeCounter, TEXT("# Uploaded: %d [%d]"), numuploaded, failedcount);
+    wsprintf((LPWSTR)&strSizeCounter, TEXT("# Uploaded: %d [%d]"), GetNumSuccess(), GetNumFailed());
     //FillRect(hdc, &rcNumUploaded, hbrushNumUploaded);
     SelectObject(hdc, hFontNormal);
     DrawText(hdc, strSizeCounter, wcslen(strSizeCounter), &rcNumUploaded, DT_TOP | DT_LEFT);

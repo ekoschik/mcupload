@@ -117,7 +117,7 @@ VOID MouseClick(POINT pt)
         }
         if (PtInRect(&rctextResetButton, pt)) {
             //Press the reset button
-            ResetDataFiles();
+            ResetDataIni();
         }
     } else {
         if (PtInRect(&rctextSettings, pt)) {
