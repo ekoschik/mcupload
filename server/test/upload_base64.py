@@ -28,6 +28,7 @@ def base64_encode_file(fname):
 
 def main():
     fname = sys.argv[1]
+    url = sys.argv[2] or URL
     buff = base64_encode_file(fname)
     data = {
         'user': 'brian',
@@ -37,7 +38,7 @@ def main():
 
     print 'sending data {} to server {}'.format(data, URL)
 
-    http_send_json(URL, data)
+    http_send_json(url, data)
 
 
 main()
