@@ -295,6 +295,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     LoadString(hInstance,
         IDC_MCUPLOADICON, szWindowClass, MAX_LOADSTRING);
 
+    InitCommonControls();
+
     if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
     }

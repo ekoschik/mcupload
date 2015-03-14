@@ -70,6 +70,19 @@ BOOL IsFilenameInFailedList(LPCWSTR filename)
     }
     return FALSE;
 }
+
+BOOL IsFilenameInPendingList(LPCWSTR filename)
+{
+    std::string file = ToStr(filename);
+    for (auto it = PendingList.begin();
+        it != PendingList.end(); ++it) {
+        if (it->compare(file) == 0) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 VOID AddFileToSuccessList(LPCWSTR filename)
 {
     std::string file = ToStr(filename);
@@ -110,6 +123,11 @@ VOID AddFileToFailedList(LPCWSTR filename)
 {
     std::string file = ToStr(filename);
     FailedList.push_back(file);
+}
+
+VOID RemoveFileFromPending(LPCWSTR filename)
+{
+
 }
 
 int GetNumSuccess() {

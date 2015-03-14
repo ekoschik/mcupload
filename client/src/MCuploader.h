@@ -42,7 +42,6 @@ VOID    ProcessDirectoryChange();
 //upload.cpp
 VOID    InitUpload();
 BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket);
-extern std::vector<std::string> UploadedFilesList;
 SOCKET GetSocket();
 
 //uploadlists.cpp
@@ -50,12 +49,18 @@ VOID    InitUploadLists();
 BOOL    IsFilenameInIgnoreList(LPCWSTR filename);
 BOOL    IsFilenameInSuccessList(LPCWSTR filename);
 BOOL    IsFilenameInFailedList(LPCWSTR filename);
+BOOL    IsFilenameInPendingList(LPCWSTR filename);
 VOID    AddFileToPendingList(LPCWSTR filename);
 VOID    AddFileToSuccessList(LPCWSTR filename);
 VOID    AddFileToFailedList(LPCWSTR filename);
 VOID    AddFileToIgnoreList(LPCWSTR filename);
+VOID    RemoveFileFromPending(LPCWSTR filename);
 int GetNumFailed();
 int GetNumSuccess();
+extern std::vector<std::string> SuccessList;
+extern std::vector<std::string> IgnoreList;
+extern std::vector<std::string> PendingList;
+extern std::vector<std::string> FailedList;
 
 //dataini.cpp
 BOOL    GetScreenshotsDirectoryPath();

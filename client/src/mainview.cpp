@@ -8,10 +8,32 @@ RECT rctextUsername;
 RECT rctextWorld;
 RECT rcUploadListArea;
 RECT rcNumUploaded;
-RECT rcScreenshotsDirectoryLink;
 
-HBRUSH hbrushNumUploaded;
-HBRUSH hbrushScreenshotsLink;
+HBRUSH hbrListAreaBackground;
+HWND hWndListView;
+
+BOOL Init_ListView(HWND hWnd)
+{
+    hWndListView = CreateWindow(WC_LISTVIEW,
+        L"",
+        WS_CHILD | LVS_REPORT | LVS_EDITLABELS,
+        rcUploadListArea.left, rcUploadListArea.top,
+        rcUploadListArea.right - rcUploadListArea.left,
+        rcUploadListArea.bottom - rcUploadListArea.top,
+        hWnd, NULL, hInst, NULL);
+
+
+
+
+
+    //TODO : Create Listview, populated with SuccessList
+
+
+
+
+    return TRUE;
+}
+
 
 BOOL Init_MainView(HWND hWnd)
 {
@@ -19,18 +41,16 @@ BOOL Init_MainView(HWND hWnd)
     SetRect(&rctextUsername, 20, 20, 150, 50);
     SetRect(&rctextWorld, 20, 50, 150, 80);
 
-    SetRect(&rcUploadListArea, 10, 80, 200, 240);
+    SetRect(&rcUploadListArea, 10, 50, 230, 240);
 
     SetRect(&rcNumUploaded, 250, 218, 390, 240);
-    hbrushNumUploaded = CreateSolidBrush(RGB(55, 191, 60));
 
-    SetRect(&rcScreenshotsDirectoryLink, 300, 70, 390, 90);
-    hbrushScreenshotsLink = CreateSolidBrush(RGB(133, 37, 250));
+    hbrListAreaBackground = CreateSolidBrush(RGB(255, 255, 255));
 
     return TRUE;
 }
 
-extern int failedcount;
+
 
 VOID Draw_MainView(HWND hWnd, HDC hdc)
 {
@@ -42,26 +62,15 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     //header with Username and World
     SelectObject(hdc, hFontHeader);
     DrawText(hdc, Username, wcslen(Username), &rctextUsername, DT_TOP | DT_LEFT);
-    DrawText(hdc, World, wcslen(World), &rctextWorld, DT_TOP | DT_LEFT);
-
-    //open directory button
-    SelectObject(hdc, hFontNormal);
-    LPWSTR strScreenshotsDir = TEXT("Screenshots Dir");
-    FillRect(hdc, &rcScreenshotsDirectoryLink, hbrushScreenshotsLink);
-    DrawText(hdc, strScreenshotsDir, wcslen(strScreenshotsDir), &rcScreenshotsDirectoryLink, DT_TOP | DT_LEFT);
-
-    //open website button
-
+    //DrawText(hdc, World, wcslen(World), &rctextWorld, DT_TOP | DT_LEFT);
 
     //counter for number of successfully uploaded screenshots
-    int numuploaded = UploadedFilesList.size();
     WCHAR strSizeCounter[100];
     wsprintf((LPWSTR)&strSizeCounter, TEXT("# Uploaded: %d [%d]"), GetNumSuccess(), GetNumFailed());
     //FillRect(hdc, &rcNumUploaded, hbrushNumUploaded);
     SelectObject(hdc, hFontNormal);
     DrawText(hdc, strSizeCounter, wcslen(strSizeCounter), &rcNumUploaded, DT_TOP | DT_LEFT);
     
-
 
     //Uploaded scrolling area
     //Rectangle(hdc, rcUploadListArea.left, rcUploadListArea.top, rcUploadListArea.right, rcUploadListArea.bottom);

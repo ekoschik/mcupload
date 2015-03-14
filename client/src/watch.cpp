@@ -5,23 +5,36 @@
 #include <fstream>
 #include <string>
 
-std::vector<std::string> UploadedFilesList;
-int failedcount = 0;
+
+VOID FlushPending()
+{
+    for (auto it = PendingList.begin(); it != PendingList.end(); ++it) {
+        SOCKET Socket = GetSocket();
+        if (Socket == NULL) {
+            return;
+        }
+
+        //TODO: string->wstr and create filepath
+
+        //if (UploadFile(filepath, filename, Socket)) {
+        //    RemoveFileFromPending(filename);
+        //    AddFileToSuccessList(filename);
+        //}
+    }
+}
 
 VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 {
     if (IsFilenameInIgnoreList(filename) ||
-        IsFilenameInFailedList(filename)) {
+        IsFilenameInFailedList(filename) ||
+        IsFilenameInPendingList(filename) ||
+        IsFilenameInSuccessList(filename)) {
         return;
     }
 
     SOCKET Socket = GetSocket();
     if (Socket == NULL) {
         AddFileToPendingList(filename);
-        return;
-    }
-
-    if (IsFilenameInSuccessList(filename)) {
         return;
     }
 
@@ -157,7 +170,6 @@ BOOL GetScreenshotsDirectoryPath()
     }
 
     PathAppend(ScreenshotDirPath, TEXT("\\.minecraft\\screenshots"));
-    InitCommonControls();
 
     return TRUE;
 }
