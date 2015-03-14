@@ -72,7 +72,7 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
 
     case WM_KILLFOCUS:
     {
-        Hide();
+        //Hide();
         break;
     }
         
