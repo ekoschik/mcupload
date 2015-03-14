@@ -5,6 +5,8 @@
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-color: #222;
+  color: #DDD;
 }
 
 a {
@@ -30,7 +32,12 @@ a {
     padding-top: 19%;
     position: relative;
     margin: 0.5%;
-    border: 4px solid #333;
+    border: 4px solid #555;
+    cursor: pointer;
+}
+
+.image-list ul li:hover {
+    border: 4px solid #BEA051;
 }
 
 .image-list ul li > * {
@@ -46,10 +53,65 @@ a {
     height: 100%;
 }
 
+.hidden {
+    display: none;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #000;
+    opacity: 0.8;
+    z-index: 100;
+}
+
+.modal-content {
+    margin: 0;
+    position: fixed;
+    top: 5%;
+    left: 5%;
+    right: 5%;
+    bottom: 5%;
+    z-index: 101;
+}
+
+.modal-image {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    width: 74%;
+    margin: 0.5%;
+    height: 100%;
+    float: left;
+}
+
+.modal-map {
+    float: left;
+    width: 24%;
+    height: 100%;
+    margin: 0.5%;
+}
+
+.modal-map iframe {
+    width: 100%;
+    height: 100%;
+}
+
 @media only screen and (max-width: 1024px) {
     .image-list ul li {
         width: 32.33%;
         padding-top: 32.33%;
+    }
+
+    .modal-image, .modal-map {
+        width: 100%;
+        height: 49%;
+        margin: 0.5%;
+        margin: 0;
+        display: block;
     }
 }
 
@@ -58,5 +120,11 @@ a {
         width: 98%;
         padding-top: 98%;
         margin: 1%;
+    }
+}
+
+@media only screen and (max-device-width: 512px) {
+    body {
+        padding: 10px;
     }
 }
