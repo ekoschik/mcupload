@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
@@ -5,4 +9,54 @@ body {
 
 a {
   color: #00B7FF;
+}
+
+.image-list {
+    margin-left: auto;
+    margin-right: auto;
+    overflow: auto;
+}
+
+.image-list ul {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.image-list ul li {
+    float: left;
+    width: 19%;
+    padding-top: 19%;
+    position: relative;
+    margin: 0.5%;
+    border: 4px solid #333;
+}
+
+.image-list ul li > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.image {
+    background-position: center center;
+    background-size: cover;
+    width: 100%;
+    height: 100%;
+}
+
+@media only screen and (max-width: 1024px) {
+    .image-list ul li {
+        width: 32.33%;
+        padding-top: 32.33%;
+    }
+}
+
+@media only screen and (max-width: 512px) {
+    .image-list ul li {
+        width: 98%;
+        padding-top: 98%;
+        margin: 1%;
+    }
 }

@@ -2,7 +2,9 @@ extends layout
 
 block content
     h1= title
-    ul
-        each image in images
-            li
-                img(src= 'screenshots/' + image.url)
+    div(class='image-list')
+        ul
+            each image in images
+                li
+                    div(class='image' style='background-image: url(screenshots/' + image.url + ');')
+                    //img(src= 'screenshots/' + image.url)
