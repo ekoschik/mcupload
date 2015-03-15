@@ -4,10 +4,12 @@ var express    = require('express')
   , bodyParser = require('body-parser')
   , multer     = require('multer')
   , path       = require('path')
+  , http       = require('http')
   , fs         = require('fs')
   , config     = require('config')
   , models     = require('./models')
   , app        = express()
+  , server     = http.createServer(app)
   ;
 
 
@@ -46,6 +48,9 @@ function loadRoutes(base) {
             } else {
                 // remove the extension, remove the base directory name
                 var routeName = routePath.substr(0, routePath.indexOf('.')).substr(base.length);
+                if (routeName === '/index') {
+                    routeName = '/';
+                }
 
                 var router = express.Router();
                 require(path.join(__dirname, routePath))(router, models);
@@ -95,7 +100,8 @@ app.use(function(err, req, res, next) {
 // sync the database and then start the server
 models.sequelize.sync().then(function() {
     var port = config.get('port');
-    app.listen(port, function() {
+    var address = config.get('ipAddress');
+    server.listen(port, address, function() {
         console.log('Listening on port', port);
     });
 });

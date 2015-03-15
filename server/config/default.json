@@ -19,6 +19,12 @@
    */
   "port": 3000,
 
+  /**
+   * The ip address the server will listen on. Can be overridden by
+   * specifing the environment variable "IP_ADDRESS".
+   */
+   "ipAddress": "127.0.0.1",
+
   /** The directory where uploaded files will be saved. */
   "uploadDir": "./uploads",
 
