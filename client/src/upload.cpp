@@ -15,6 +15,8 @@ VOID InitUpload()
 using namespace std;
 
 #define RECEIVER   "/upload"
+#define PORT       3000
+#define IP         "localhost"
 
 string getBody(string username, string filename, string filedata) {
     string body;
@@ -54,7 +56,7 @@ string getHeader(int bodysize)
         "Connection: Keep-Alive\r\n"
         "Content-Type:application/json\r\n"
         "Accept: application/json\r\n\r\n",
-        RECEIVER, UD.servername, bodysize);
+        RECEIVER, IP/*UD.servername*/, bodysize);
     return string(header);
 }
 
@@ -72,19 +74,20 @@ SOCKET GetSocket()
     
     //Read servername and resolve host name
     struct hostent *host;
-    
-    CHAR hostbuf[RandomBufSize];
-    ZeroMemory(&hostbuf, RandomBufSize);
-    wcstombs((char*)&hostbuf, UD.servername.c_str(), UD.servername.size());
-    host = gethostbyname((const char*)&hostbuf);
+    //CHAR hostbuf[RandomBufSize];
+    //ZeroMemory(&hostbuf, RandomBufSize);
+    //wcstombs((char*)&hostbuf, UD.servername.c_str(), UD.servername.size());
+    //host = gethostbyname((const char*)&hostbuf);
+    host = gethostbyname(IP);
     if (host == NULL) {
         return NULL;
     }
 
     //Read port and connect to socket
     SOCKADDR_IN SockAddr;
-    unsigned short port = wcstoul(UD.port.c_str(), NULL, 0);
-    SockAddr.sin_port = htons(port);
+    //unsigned short port = wcstoul(UD.port.c_str(), NULL, 0);
+    //SockAddr.sin_port = htons(port);
+    SockAddr.sin_port = htons(PORT);
     SockAddr.sin_family = AF_INET;
     SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
     if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0){
@@ -108,14 +111,29 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket)
 	string header = getHeader(body.size());
 
     //Send Request
-    send(Socket, header.c_str(), header.size(), 0);
-    send(Socket, body.c_str(), body.size(), 0);
+    int r1 = send(Socket, header.c_str(), header.size(), 0);
+    int r2 = send(Socket, body.c_str(), body.size(), 0);
 
 
     //Read response
     char buffer[10000] = { };
     int nDataLength;
+    string ret;
     nDataLength = recv(Socket, buffer, 10000, 0);
+    ret = buffer;
+    //do { 
+    //    nDataLength = recv(Socket, buffer, 10000, 0);
+    //    if (nDataLength > 0) {
+    //        ret += buffer;
+    //    }
+    //    else if (nDataLength == 0) {
+    //        ERROR(_T("Connection closed"));
+    //    }
+    //    else {
+    //        int i = WSAGetLastError();
+    //        ERROR(_T("recv failed"));
+    //    }
+    //} while (nDataLength > 0);
 
     //Jank City (...read response code)
     char* retStatus = buffer + 9;

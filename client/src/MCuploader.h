@@ -76,7 +76,6 @@ extern std::vector<std::string> FailedList;
 //dataini.cpp
 BOOL    InitDataFile();
 VOID    WriteDataToFile();
-VOID    ReadContentsFromFile();
 VOID    OpenScreenshotsDirectory();
 std::string ToStr(LPCWSTR in);
 extern WCHAR    IniFilePath[MAX_PATH];

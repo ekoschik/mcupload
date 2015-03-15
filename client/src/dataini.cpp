@@ -63,37 +63,44 @@ VOID WriteDataToFile()
 
 }
 
-VOID ReadContentsFromFile()
+BOOL ReadContentsFromFile()
 {
     WCHAR wcharbuf[1000];
     int ret;
+    BOOL bFile = FALSE;
 
     if (GetPrivateProfileString(
         appname, keynames[username],
         _T(""), wcharbuf, 1000, IniFilePath) > 0) {
         UD.username = wcharbuf;
+        bFile = TRUE;
     }
     if (GetPrivateProfileString(
         appname, keynames[world],
         _T(""), wcharbuf, 1000, IniFilePath) > 0) {
         UD.world = wcharbuf;
+        bFile = TRUE;
     }
     if (GetPrivateProfileString(
         appname, keynames[servername],
         _T(""), wcharbuf, 1000, IniFilePath) > 0) {
         UD.servername = wcharbuf;
+        bFile = TRUE;
     }
     if (GetPrivateProfileString(
         appname, keynames[port],
         _T(""), wcharbuf, 1000, IniFilePath) > 0) {
         UD.port = wcharbuf;
+        bFile = TRUE;
     }
     if (GetPrivateProfileString(
         appname, keynames[screenshotdirectory],
         _T(""), wcharbuf, 1000, IniFilePath) > 0) {
         UD.screenshotdirectory = wcharbuf;
+        bFile = TRUE;
     }
 
+    return bFile;
 }
 //
 //
@@ -155,7 +162,9 @@ BOOL InitDataFile()
     //Initialize IniFilePath
     PathAppend(IniFilePath, TEXT("\\data.ini"));
     InitDefaultValues();
-    ReadContentsFromFile();
+    if (!ReadContentsFromFile()) {
+        GoToSetup();
+    }
 
     return TRUE;
 }
