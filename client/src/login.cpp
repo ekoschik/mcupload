@@ -49,11 +49,11 @@ VOID Login_Commit()
     //Write UD to data.ini
     WriteDataToFile();
 
+    //Switch view, (which unpauses uploades)
     GoToMainView();
 
     //Logging in kicks off one directory sweep
-    //  make sure happens after switching
-    //  view to account for new user name
+    //  make sure happens after switching to main view
     OffThreadProcessDirectoryChange();
 
     HideEditControls();
@@ -115,7 +115,7 @@ BOOL Init_Login(HWND hWnd)
     if (PortEditControl == NULL) {
         return FALSE;
     }
-
+    SetLoginEditControlsFromUD();
     HideEditControls();
 
     //Subclass edit controls to commit on enter/tab

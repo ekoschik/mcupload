@@ -51,7 +51,6 @@ LPCWSTR GetWatchedDirectory();
 VOID    ProcessDirectoryChange();
 
 //upload.cpp
-VOID    InitUpload();
 BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket);
 SOCKET GetSocket();
 
