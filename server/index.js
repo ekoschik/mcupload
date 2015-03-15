@@ -10,6 +10,7 @@ var express    = require('express')
   , models     = require('./models')
   , app        = express()
   , server     = http.createServer(app)
+  , io         = require('socket.io')(server)
   ;
 
 
@@ -52,8 +53,10 @@ function loadRoutes(base) {
                     routeName = '/';
                 }
 
+                var socket = io.of(routeName);
+
                 var router = express.Router();
-                require(path.join(__dirname, routePath))(router, models);
+                require(path.join(__dirname, routePath))(router, models, socket);
 
                 console.log('using route ' + routeName);
                 // replace backslash with forward slash, fix for windows

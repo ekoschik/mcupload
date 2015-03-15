@@ -8,19 +8,25 @@ var Promise   = require('bluebird')
   , md5       = require('MD5')
   , validate  = require('../lib/validate')
   , uploadDir = require('config').get('uploadDir')
+  , util      = require('util')
   ;
 
-module.exports = function(router, models) {
+module.exports = function(router, models, io) {
+
+    io.on('connection', function(socket) {
+        console.log('a client has connected: ' + socket);
+    });
+
     router.get('/', function(req, res) {
         models.Image.findAll({
             order: 'createdAt DESC'
         }).then(function(images) {
             res.render('screenshots.jade', { title: 'Screenshots', 'images': images });
-        }).error(function(e) {
+        }).catch(function(e) {
             res.sendStatus(500);
         });
     });
-    
+
     router.get('/upload', function(req, res) {
         res.render('upload_form.jade', { title: 'Upload File' });
     });
@@ -73,7 +79,11 @@ module.exports = function(router, models) {
             console.log('Adding new image to database:', imageRec);
 
             return models.Image.create(imageRec).then(fs.writeFileAsync.bind(null, path.join(uploadDir, url), buffer))
-                                                .then(res.sendStatus.bind(res, 204));
+                                                .then(res.sendStatus.bind(res, 204))
+                                                .then(function() {
+                                                    imageRec.url = getImageUrl(imageRec.url);
+                                                    io.emit('screenshot', imageRec);
+                                                });
         }).catch(validate.ValidationError, function(e) {
             res.status(403).json({ error: 'The uploaded file is not an image.' });
         }).catch(models.sequelize.UniqueConstraintError, function(e) {
@@ -90,3 +100,6 @@ function createFileName() {
     return crypto.randomBytes(20).toString('hex');
 }
 
+function getImageUrl(imageId) {
+    return 'screenshots/' + imageId;
+}
