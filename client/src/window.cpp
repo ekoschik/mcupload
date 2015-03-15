@@ -19,6 +19,7 @@ VOID GoToSettings() {
 VOID GoToSetup() {
     bSettingsView = FALSE;
     bSetupView = TRUE;
+    SetLoginEditControlsFromUD();
     InvalidateRect(hMainWnd, NULL, TRUE);
 }
 VOID GoToMainView() {
@@ -42,8 +43,8 @@ VOID Draw_Login(HWND hWnd, HDC hdc);
 VOID Login_Commit();
 VOID HideEditControls();
 extern RECT rcLoginEnterButtonFrame;
-extern HWND hLoginUsernameEditControl;
-extern HWND hLoginWorldEditControl;
+//extern HWND hLoginUsernameEditControl;
+//extern HWND hLoginWorldEditControl;
 //
 // Main View (mainview.cpp)
 //
@@ -117,8 +118,7 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 
     HideEditControls();
     ShowWindow(hWndListView, SW_HIDE);
-    ShowWindow(hLoginWorldEditControl, SW_HIDE);
-    ShowWindow(hLoginUsernameEditControl, SW_HIDE);
+
 
     //Draw background, save RECT to rcWindow
     GetClientRect(hWnd, &rcWindow);

@@ -19,6 +19,7 @@ __inline VOID Error(LPWSTR msg) {
 }
 
 
+VOID SetLoginEditControlsFromUD();
 BOOL RefreshListView();
 LRESULT NotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 

@@ -3,30 +3,31 @@
 #include "MCuploader.h"
 
 
-extern HWND hwndMain;
-
 RECT rcLoginHeader;
+
 RECT rcLoginUsernameText;
-RECT rcLoginWorldText;
+RECT rcLoginServerText;
+RECT rcLoginPortText;
+
 RECT rcLoginUsernameEdit;
-RECT rcLoginWorldEdit;
+RECT rcLoginServerEdit;
+RECT rcLoginPortEdit;
+
 RECT rcLoginEnterButton;
 RECT rcLoginEnterButtonFrame;
-HWND hLoginUsernameEditControl;
-HWND hLoginWorldEditControl;
+HWND UsernameEditControl;
+HWND ServerEditControl;
+HWND PortEditControl;
 HBRUSH hbrushEnterButton;
 
-WNDPROC OldUsernameEditWndProc;
-WNDPROC OldWorldEditWndProc;
+WNDPROC OldEditWndProc;
 
 
 VOID HideEditControls()
 {
-    SetWindowPos(hLoginUsernameEditControl, NULL,
-        0, 0, 0, 0, SWP_HIDEWINDOW);
-
-    SetWindowPos(hLoginWorldEditControl, NULL,
-        0, 0, 0, 0, SWP_HIDEWINDOW);
+    ShowWindow(UsernameEditControl, SW_HIDE);
+    ShowWindow(ServerEditControl, SW_HIDE);
+    ShowWindow(PortEditControl, SW_HIDE);
 }
 
 extern VOID OffThreadProcessDirectoryChange();
@@ -34,13 +35,16 @@ extern VOID OffThreadProcessDirectoryChange();
 VOID Login_Commit()
 {
     WCHAR buf[1000];
-
+    
     //Read data from edit controls and write to UD
-    GetWindowText(hLoginUsernameEditControl, buf, MAX_PATH);
+    GetWindowText(UsernameEditControl, buf, MAX_PATH);
     UD.username = buf;
     
-    GetWindowText(hLoginWorldEditControl, buf, MAX_PATH);
-    UD.world = buf;
+    GetWindowText(ServerEditControl, buf, MAX_PATH);
+    UD.servername = buf;
+
+    GetWindowText(PortEditControl, buf, MAX_PATH);
+    UD.port = buf;
 
     //Write UD to data.ini
     WriteDataToFile();
@@ -52,7 +56,14 @@ VOID Login_Commit()
     GoToMainView();
 }
 
-INT_PTR CALLBACK EmailEditControlWndProc(
+VOID SetLoginEditControlsFromUD()
+{
+    SetWindowText(UsernameEditControl, UD.username.c_str());
+    SetWindowText(ServerEditControl, UD.servername.c_str());
+    SetWindowText(PortEditControl, UD.port.c_str());
+}
+
+INT_PTR CALLBACK EditControlWndProc(
     _In_  HWND hwndDlg,
     _In_  UINT uMsg,
     _In_  WPARAM wParam,
@@ -61,18 +72,17 @@ INT_PTR CALLBACK EmailEditControlWndProc(
     switch (uMsg) {
     case WM_KEYDOWN:
         //the whole tab and enter thing...
-        if (wParam == VK_TAB && hwndDlg == hLoginUsernameEditControl) {
-            SetFocus(hLoginWorldEditControl);
-        }
-        else if (wParam == VK_RETURN || wParam == VK_TAB) {
+        if (wParam == VK_TAB && hwndDlg == UsernameEditControl) {
+            SetFocus(ServerEditControl);
+        } else if (wParam == VK_TAB && hwndDlg == ServerEditControl) {
+            SetFocus(PortEditControl);
+        } else if (wParam == VK_RETURN || wParam == VK_TAB) {
             Login_Commit();
         }
         break;
     }
 
-    return (hwndDlg == hLoginUsernameEditControl) ?
-        OldUsernameEditWndProc(hwndDlg, uMsg, wParam, lParam) :
-        OldWorldEditWndProc(hwndDlg, uMsg, wParam, lParam);
+    return OldEditWndProc(hwndDlg, uMsg, wParam, lParam);
 }
 
 BOOL bUsernameSet;
@@ -82,34 +92,45 @@ WCHAR World[MAX_PATH];
 BOOL Init_Login(HWND hWnd)
 {
     //Create edit controls
-    hLoginUsernameEditControl = CreateWindow(TEXT("edit"), NULL,
+    UsernameEditControl = CreateWindow(TEXT("edit"), NULL,
         WS_CHILD | WS_VISIBLE | WS_BORDER,
         0, 0, 0, 0, hWnd, NULL, hInst, NULL);
-    if (hLoginUsernameEditControl == NULL) {
+    if (UsernameEditControl == NULL) {
         return FALSE;
     }
 
-    hLoginWorldEditControl = CreateWindow(TEXT("edit"), NULL,
+    ServerEditControl = CreateWindow(TEXT("edit"), NULL,
         WS_CHILD | WS_VISIBLE | WS_BORDER,
         0, 0, 0, 0, hWnd, NULL, hInst, NULL);
-    if (hLoginWorldEditControl == NULL) {
+    if (ServerEditControl == NULL) {
+        return FALSE;
+    }
+
+    PortEditControl = CreateWindow(TEXT("edit"), NULL,
+        WS_CHILD | WS_VISIBLE | WS_BORDER,
+        0, 0, 0, 0, hWnd, NULL, hInst, NULL);
+    if (PortEditControl == NULL) {
         return FALSE;
     }
 
     HideEditControls();
 
-    //Subclass username edit control to commit on enter/tab
-    OldUsernameEditWndProc =
-        (WNDPROC)SetWindowLongPtr(hLoginUsernameEditControl,
-        GWLP_WNDPROC, (LONG_PTR)EmailEditControlWndProc);
-    OldWorldEditWndProc =
-        (WNDPROC)SetWindowLongPtr(hLoginWorldEditControl,
-        GWLP_WNDPROC, (LONG_PTR)EmailEditControlWndProc);
+    //Subclass edit controls to commit on enter/tab
+    OldEditWndProc =
+        (WNDPROC)SetWindowLongPtr(UsernameEditControl,
+        GWLP_WNDPROC, (LONG_PTR)EditControlWndProc);
+    (WNDPROC)SetWindowLongPtr(ServerEditControl,
+        GWLP_WNDPROC, (LONG_PTR)EditControlWndProc);
+    (WNDPROC)SetWindowLongPtr(PortEditControl,
+        GWLP_WNDPROC, (LONG_PTR)EditControlWndProc);
 
+    //Create Brushes and things
     hbrushEnterButton = CreateSolidBrush(RGB(105, 107, 255));
 
-    int offsetX = 60;
-    int offsetY = 50;
+    //Set RECTs
+
+    int offsetX = 90;
+    int offsetY = 30;
     int buf = 10;
 
     //Header
@@ -122,7 +143,7 @@ BOOL Init_Login(HWND hWnd)
         offsetY + headerheight);
 
     //Username Text
-    int usernametxtwidth = 110;
+    int usernametxtwidth = 100;
     int usernametxtheight = 20;
     SetRect(&rcLoginUsernameText,
         offsetX,
@@ -130,14 +151,23 @@ BOOL Init_Login(HWND hWnd)
         offsetX + usernametxtwidth,
         rcLoginHeader.bottom + buf + usernametxtheight);
 
-    //World Text
+    //Server Text
     int worldtxtwidth = 100;
     int worldtxtheight = 20;
-    SetRect(&rcLoginWorldText,
+    SetRect(&rcLoginServerText,
         offsetX,
         rcLoginUsernameText.bottom + buf,
         offsetX + worldtxtwidth,
         rcLoginUsernameText.bottom + buf + worldtxtheight);
+   
+    //Port Text
+    int porttxtwidth = 100;
+    int porttxtheight = 20;
+    SetRect(&rcLoginPortText,
+        offsetX,
+        rcLoginServerText.bottom + buf,
+        offsetX + porttxtwidth,
+        rcLoginServerText.bottom + buf + porttxtheight);
 
     //Username Edit Control
     int usernameeditwidth = 100;
@@ -148,24 +178,35 @@ BOOL Init_Login(HWND hWnd)
         rcLoginUsernameText.right + buf + usernameeditwidth,
         rcLoginUsernameText.bottom);
 
-    //World Edit Control
-    int worldeditwidth = 100;
-    int worldeditheight = 20;
-    SetRect(&rcLoginWorldEdit,
-        rcLoginWorldText.right + buf,
-        rcLoginWorldText.top,
-        rcLoginWorldText.right + buf + worldeditwidth,
-        rcLoginWorldText.bottom);
+    //Server Edit Control
+    int servereditwidth = 100;
+    int servereditheight = 20;
+    SetRect(&rcLoginServerEdit,
+        rcLoginServerText.right + buf,
+        rcLoginServerText.top,
+        rcLoginServerText.right + buf + servereditwidth,
+        rcLoginServerText.bottom);
+
+    //Port Edit Control
+    int porteditwidth = 100;
+    int porteditheight = 20;
+    SetRect(&rcLoginPortEdit,
+        rcLoginPortText.right + buf,
+        rcLoginPortText.top,
+        rcLoginPortText.right + buf + porteditwidth,
+        rcLoginPortText.bottom);
+
+    
 
     //Enter Button
     int buttonSpace = 20;
     int buttonwidth = 50;
     int buttonheight = 20;
     SetRect(&rcLoginEnterButton,
-        rcLoginWorldText.left,
-        rcLoginWorldText.bottom + buf + buttonSpace,
-        rcLoginWorldText.left + buttonwidth,
-        rcLoginWorldText.bottom + buf + buttonSpace + buttonheight);
+        rcLoginPortText.left,
+        rcLoginPortText.bottom + buf + buttonSpace,
+        rcLoginPortText.left + buttonwidth,
+        rcLoginPortText.bottom + buf + buttonSpace + buttonheight);
     SetRect(&rcLoginEnterButtonFrame,
         rcLoginEnterButton.left - 5,
         rcLoginEnterButton.top - 5,
@@ -182,9 +223,10 @@ VOID Draw_Login(HWND hWnd, HDC hdc)
 
     FillRect(hdc, &rcWindow, hbackground);
 
-    LPWSTR strHeader = TEXT("Hey there, looks like you're new.");
-    LPWSTR strUsername = TEXT("MC username:");
-    LPWSTR strWorldName = TEXT("World Name:");
+    LPWSTR strHeader = TEXT("Please Login");
+    LPWSTR strUsername = TEXT("username:");
+    LPWSTR strServer = TEXT("server:");
+    LPWSTR strPort = TEXT("port:");
     LPWSTR strEnter = TEXT("Enter");
 
     SelectObject(hdc, hFontHeader);
@@ -192,27 +234,38 @@ VOID Draw_Login(HWND hWnd, HDC hdc)
 
     SelectObject(hdc, hFontNormal);
     DrawText(hdc, strUsername, wcslen(strUsername), &rcLoginUsernameText, DT_TOP | DT_LEFT);
-    DrawText(hdc, strWorldName, wcslen(strWorldName), &rcLoginWorldText, DT_TOP | DT_LEFT);
-
+    DrawText(hdc, strServer, wcslen(strServer), &rcLoginServerText, DT_TOP | DT_LEFT);
+    DrawText(hdc, strPort, wcslen(strPort), &rcLoginPortText, DT_TOP | DT_LEFT);
+    
 
     FillRect(hdc, &rcLoginEnterButtonFrame, hbrushEnterButton);
     DrawText(hdc, strEnter, wcslen(strEnter), &rcLoginEnterButton, DT_TOP | DT_LEFT);
 
-    SetWindowPos(hLoginUsernameEditControl, NULL,
+    SetWindowPos(UsernameEditControl, NULL,
         rcLoginUsernameEdit.left,
         rcLoginUsernameEdit.top,
         rcLoginUsernameEdit.right - rcLoginUsernameEdit.left,
         rcLoginUsernameEdit.bottom - rcLoginUsernameEdit.top,
         SWP_SHOWWINDOW);
 
-    SetWindowPos(hLoginWorldEditControl, NULL,
-        rcLoginWorldEdit.left,
-        rcLoginWorldEdit.top,
-        rcLoginWorldEdit.right - rcLoginWorldEdit.left,
-        rcLoginWorldEdit.bottom - rcLoginWorldEdit.top,
+    SetWindowPos(ServerEditControl, NULL,
+        rcLoginServerEdit.left,
+        rcLoginServerEdit.top,
+        rcLoginServerEdit.right - rcLoginServerEdit.left,
+        rcLoginServerEdit.bottom - rcLoginServerEdit.top,
         SWP_SHOWWINDOW);
 
-    SetFocus(hLoginUsernameEditControl);
+    SetWindowPos(PortEditControl, NULL,
+        rcLoginPortEdit.left,
+        rcLoginPortEdit.top,
+        rcLoginPortEdit.right - rcLoginPortEdit.left,
+        rcLoginPortEdit.bottom - rcLoginPortEdit.top,
+        SWP_SHOWWINDOW);
+
+
+    
+    //Set focus to username edit control
+    SetFocus(UsernameEditControl);
 }
 
 
