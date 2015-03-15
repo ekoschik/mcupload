@@ -7,14 +7,22 @@
 #include <fstream>
 #include "stdio.h"
 
-VOID InitUpload() 
-{ 
-    
-}
-
 using namespace std;
 
 #define RECEIVER   "/upload"
+
+CHAR ipbuf[1000];
+const char* ReadIP() {
+    ZeroMemory(&ipbuf, 1000);
+    wcstombs((char*)&ipbuf, UD.servername.c_str(), UD.servername.size());
+    return (const char*)&ipbuf;
+}
+
+unsigned short ReadPort() {
+    unsigned short port = wcstoul(UD.port.c_str(), NULL, 0);
+    return port;
+}
+
 
 string getBody(string username, string filename, string filedata) {
     string body;
@@ -54,7 +62,7 @@ string getHeader(int bodysize)
         "Connection: Keep-Alive\r\n"
         "Content-Type:application/json\r\n"
         "Accept: application/json\r\n\r\n",
-        RECEIVER, UD.servername, bodysize);
+        RECEIVER, ReadIP(), bodysize);
     return string(header);
 }
 
@@ -70,21 +78,16 @@ SOCKET GetSocket()
     //Create Socket
     SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     
-    //Read servername and resolve host name
+    //Resolve host name
     struct hostent *host;
-    
-    CHAR hostbuf[RandomBufSize];
-    ZeroMemory(&hostbuf, RandomBufSize);
-    wcstombs((char*)&hostbuf, UD.servername.c_str(), UD.servername.size());
-    host = gethostbyname((const char*)&hostbuf);
+    host = gethostbyname(ReadIP());
     if (host == NULL) {
         return NULL;
     }
 
-    //Read port and connect to socket
+    //Connect to socket
     SOCKADDR_IN SockAddr;
-    unsigned short port = wcstoul(UD.port.c_str(), NULL, 0);
-    SockAddr.sin_port = htons(port);
+    SockAddr.sin_port = htons(ReadPort());
     SockAddr.sin_family = AF_INET;
     SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
     if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0){
@@ -108,14 +111,16 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket)
 	string header = getHeader(body.size());
 
     //Send Request
-    send(Socket, header.c_str(), header.size(), 0);
-    send(Socket, body.c_str(), body.size(), 0);
+    int r1 = send(Socket, header.c_str(), header.size(), 0);
+    int r2 = send(Socket, body.c_str(), body.size(), 0);
 
 
     //Read response
     char buffer[10000] = { };
     int nDataLength;
+    string ret;
     nDataLength = recv(Socket, buffer, 10000, 0);
+    ret = buffer;
 
     //Jank City (...read response code)
     char* retStatus = buffer + 9;

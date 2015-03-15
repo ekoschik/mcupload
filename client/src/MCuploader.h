@@ -51,7 +51,6 @@ LPCWSTR GetWatchedDirectory();
 VOID    ProcessDirectoryChange();
 
 //upload.cpp
-VOID    InitUpload();
 BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket);
 SOCKET GetSocket();
 
@@ -76,7 +75,6 @@ extern std::vector<std::string> FailedList;
 //dataini.cpp
 BOOL    InitDataFile();
 VOID    WriteDataToFile();
-VOID    ReadContentsFromFile();
 VOID    OpenScreenshotsDirectory();
 std::string ToStr(LPCWSTR in);
 extern WCHAR    IniFilePath[MAX_PATH];

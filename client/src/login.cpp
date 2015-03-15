@@ -49,11 +49,14 @@ VOID Login_Commit()
     //Write UD to data.ini
     WriteDataToFile();
 
+    //Switch view, (which unpauses uploades)
+    GoToMainView();
+
     //Logging in kicks off one directory sweep
+    //  make sure happens after switching to main view
     OffThreadProcessDirectoryChange();
 
     HideEditControls();
-    GoToMainView();
 }
 
 VOID SetLoginEditControlsFromUD()
@@ -100,7 +103,7 @@ BOOL Init_Login(HWND hWnd)
     }
 
     ServerEditControl = CreateWindow(TEXT("edit"), NULL,
-        WS_CHILD | WS_VISIBLE | WS_BORDER,
+        WS_CHILD | WS_VISIBLE | WS_BORDER ,
         0, 0, 0, 0, hWnd, NULL, hInst, NULL);
     if (ServerEditControl == NULL) {
         return FALSE;
@@ -112,7 +115,7 @@ BOOL Init_Login(HWND hWnd)
     if (PortEditControl == NULL) {
         return FALSE;
     }
-
+    SetLoginEditControlsFromUD();
     HideEditControls();
 
     //Subclass edit controls to commit on enter/tab
@@ -179,7 +182,7 @@ BOOL Init_Login(HWND hWnd)
         rcLoginUsernameText.bottom);
 
     //Server Edit Control
-    int servereditwidth = 100;
+    int servereditwidth = 170;
     int servereditheight = 20;
     SetRect(&rcLoginServerEdit,
         rcLoginServerText.right + buf,

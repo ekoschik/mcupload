@@ -310,8 +310,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     hInst = hInstance;
 
-    InitUpload();
-
     StartWatchingDirectory();
 
     MSG msg;

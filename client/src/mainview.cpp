@@ -34,7 +34,8 @@ LRESULT NotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (pLvdi->hdr.code)
     {
-    case LVN_GETDISPINFO: //List views can ask for an items display name
+    //List views can ask for an items display name
+    case LVN_GETDISPINFO: 
         pLvdi->item.pszText = pListViewItem->strName;
         break;
         
