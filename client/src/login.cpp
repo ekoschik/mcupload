@@ -33,22 +33,23 @@ extern VOID OffThreadProcessDirectoryChange();
 
 VOID Login_Commit()
 {
-    GetWindowText(hLoginUsernameEditControl, Username, MAX_PATH);
-    GetWindowText(hLoginWorldEditControl, World, MAX_PATH);
+    WCHAR buf[1000];
 
-    SetKey(TEXT("username"), (LPWSTR)&Username);
-    SetKey(TEXT("world"), (LPWSTR)&World);
+    //Read data from edit controls and write to UD
+    GetWindowText(hLoginUsernameEditControl, buf, MAX_PATH);
+    UD.username = buf;
+    
+    GetWindowText(hLoginWorldEditControl, buf, MAX_PATH);
+    UD.world = buf;
 
-    //Go to the main window
-    bUsernameSet = TRUE;
-    bSettingsView = FALSE;
-
-    HideEditControls();
+    //Write UD to data.ini
+    WriteDataToFile();
 
     //Logging in kicks off one directory sweep
     OffThreadProcessDirectoryChange();
 
-    InvalidateRect(hwndMain, NULL, TRUE);
+    HideEditControls();
+    GoToMainView();
 }
 
 INT_PTR CALLBACK EmailEditControlWndProc(
@@ -80,12 +81,7 @@ WCHAR World[MAX_PATH];
 
 BOOL Init_Login(HWND hWnd)
 {
-    ZeroMemory(&Username, MAX_PATH);
-    ZeroMemory(&World, MAX_PATH);
-    bUsernameSet = GetKey(TEXT("username"), (LPWSTR)&Username);
-    GetKey(TEXT("world"), (LPWSTR)&World);
-
-    //Create edit control and hide them
+    //Create edit controls
     hLoginUsernameEditControl = CreateWindow(TEXT("edit"), NULL,
         WS_CHILD | WS_VISIBLE | WS_BORDER,
         0, 0, 0, 0, hWnd, NULL, hInst, NULL);

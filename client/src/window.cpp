@@ -9,11 +9,23 @@ int window_height = 250;
 HWND hwndMain;
 RECT rcWindow;
 BOOL bSettingsView = FALSE;
+BOOL bSetupView = FALSE;
 
-#define LOGINVIEW       (!bUsernameSet)
-#define SETTINGSVIEW    (bUsernameSet && bSettingsView)
-#define NORMALVIEW      (!LOGINVIEW && !SETTINGSVIEW)
-
+VOID GoToSettings() {
+    bSettingsView = TRUE;
+    bSetupView = FALSE;
+    InvalidateRect(hMainWnd, NULL, TRUE);
+}
+VOID GoToSetup() {
+    bSettingsView = FALSE;
+    bSetupView = TRUE;
+    InvalidateRect(hMainWnd, NULL, TRUE);
+}
+VOID GoToMainView() {
+    bSettingsView = FALSE;
+    bSetupView = FALSE;
+    InvalidateRect(hMainWnd, NULL, TRUE);
+}
 
 HBRUSH hbackground;
 HFONT hFontHeader;
@@ -139,19 +151,14 @@ VOID MouseClick(POINT pt)
         }
     } else if (SETTINGSVIEW) {
         if (PtInRect(&rctextBack, pt)) {
-            //Switch to main view
-            bSettingsView = FALSE;
-            InvalidateRect(hwndMain, NULL, TRUE);
+            GoToMainView();
         }
         if (PtInRect(&rctextResetButton, pt)) {
-            //Press the reset button
-            ResetDataIni();
+            GoToSetup();
         }
     } else {
         if (PtInRect(&rctextSettings, pt)) {
-            //Switch to settings view
-            bSettingsView = TRUE;
-            InvalidateRect(hwndMain, NULL, TRUE);
+            GoToSettings();
         }
         if (PtInRect(&rcScreenshotsDirectoryLink, pt)) {
             OpenScreenshotsDirectory();

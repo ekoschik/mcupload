@@ -9,6 +9,7 @@
 #include <ws2tcpip.h>
 #include <string>
 #include <vector>
+#include <string>
 
 extern HINSTANCE hInst;
 extern HWND hMainWnd;
@@ -26,9 +27,9 @@ BOOL InitializeMainWindow(HWND hWnd);
 VOID    DrawMainWindow(HWND hwnd, HDC hdc);
 VOID MouseClick(POINT pt);
 VOID KeyPressed(HWND hWnd, WPARAM wParam);
-extern WCHAR Username[MAX_PATH];
-extern WCHAR World[MAX_PATH];
-
+VOID GoToSettings();
+VOID GoToSetup();
+VOID GoToMainView();
 extern WCHAR IniFilePath[MAX_PATH];
 extern WCHAR ApplicationDirectoryPath[MAX_PATH];
 extern int window_width;
@@ -37,6 +38,10 @@ extern HFONT hFontHeader;
 extern HFONT hFontNormal;
 extern HFONT hFontSmall;
 extern BOOL bSettingsView;
+extern BOOL bSetupView;
+#define LOGINVIEW       (bSetupView)
+#define SETTINGSVIEW    (!bSetupView && bSettingsView)
+#define NORMALVIEW      (!LOGINVIEW && !SETTINGSVIEW)
 
 //watch.cpp
 BOOL    StartWatchingDirectory();
@@ -60,25 +65,42 @@ VOID    AddFileToSuccessList(LPCWSTR filename);
 VOID    AddFileToFailedList(LPCWSTR filename);
 VOID    AddFileToIgnoreList(LPCWSTR filename);
 VOID    RemoveFileFromPending(LPCWSTR filename);
-int GetNumFailed();
-int GetNumSuccess();
+int     GetNumFailed();
+int     GetNumSuccess();
 extern std::vector<std::string> SuccessList;
 extern std::vector<std::string> IgnoreList;
 extern std::vector<std::string> PendingList;
 extern std::vector<std::string> FailedList;
 
 //dataini.cpp
-BOOL    GetScreenshotsDirectoryPath();
 BOOL    InitDataFile();
-BOOL    GetKey(LPCWSTR key, LPWSTR out);
-BOOL    SetKey(LPCWSTR key, LPCWSTR val);
-VOID    ResetDataIni();
+VOID    WriteDataToFile();
+VOID    ReadContentsFromFile();
 VOID    OpenScreenshotsDirectory();
 std::string ToStr(LPCWSTR in);
-extern BOOL     bUsernameSet;
 extern WCHAR    IniFilePath[MAX_PATH];
 extern WCHAR    ApplicationDirectoryPath[MAX_PATH];
-extern WCHAR    ScreenshotDirPath[MAX_PATH];
+//extern WCHAR    ScreenshotDirPath[MAX_PATH];
+
+typedef struct myUserData {
+    std::wstring username;
+    std::wstring world;
+    std::wstring servername;
+    std::wstring port;
+    std::wstring screenshotdirectory;
+
+} USERDATA;
+extern USERDATA UD;
+
+enum KeyName {
+    username,
+    world,
+    servername,
+    port,
+    screenshotdirectory
+};
+
+
 
 //base64.cpp
 std::string base64_encode(

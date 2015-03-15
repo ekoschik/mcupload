@@ -1,7 +1,6 @@
 
 #include "stdafx.h"
 #include "MCuploader.h"
-#include <string>
 
 #define ID_LISTVIEW     1000
 
@@ -106,7 +105,7 @@ BOOL Init_ListView(HWND hWnd)
     lvC.fmt = LVCFMT_LEFT;  // left align the column
 
     // width of the column, in pixels
-    lvC.cx = rcListView.right - rcListView.left;
+    lvC.cx = rcListView.right - rcListView.left - 40;
 
     lvC.pszText = _T("FileName");
     lvC.iSubItem = 0;
@@ -152,7 +151,7 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     
     //header with Username and World
     SelectObject(hdc, hFontHeader);
-    DrawText(hdc, Username, wcslen(Username), &rctextUsername, DT_TOP | DT_LEFT);
+    DrawText(hdc, UD.username.c_str(), UD.username.size(), &rctextUsername, DT_TOP | DT_LEFT);
     
     //counter for number of successfully uploaded screenshots
     WCHAR strSizeCounter[100];

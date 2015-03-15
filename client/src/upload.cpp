@@ -92,7 +92,9 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket)
 
     //Setup Data To Be Sent
     string filedata = getFile(filepath);
-    string body = getBody(ToStr(Username), ToStr(filename), filedata);
+    string body = getBody(ToStr(UD.username.c_str()), 
+                          ToStr(filename), 
+                          filedata);
 	string header = getHeader(body.size());
 
     //Send Request

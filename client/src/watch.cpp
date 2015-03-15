@@ -52,7 +52,7 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 
 VOID ProcessDirectoryChange()
 {
-    if (!bUsernameSet) {
+    if (LOGINVIEW) {
         return;
     }
 
@@ -61,7 +61,7 @@ VOID ProcessDirectoryChange()
     WCHAR sPath[MAX_PATH];
     
     // File mask
-    wsprintf(sPath, TEXT("%s\\*.*"), ScreenshotDirPath);
+    wsprintf(sPath, TEXT("%s\\*.*"), UD.screenshotdirectory.c_str());
 
     // Call FindFirstFile on screenshot director to loop over all files
     if ((hFind = FindFirstFile(sPath, &fdFile)) == INVALID_HANDLE_VALUE) {
@@ -84,7 +84,7 @@ VOID ProcessDirectoryChange()
         }
 
         //Check file for uploading
-        wsprintf(sPath, TEXT("%s\\%s"), ScreenshotDirPath, fdFile.cFileName);
+        wsprintf(sPath, TEXT("%s\\%s"), UD.screenshotdirectory.c_str(), fdFile.cFileName);
         TestAndUploadFile(sPath, fdFile.cFileName);
 
     } while (FindNextFile(hFind, &fdFile));
@@ -122,8 +122,10 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
     DWORD dwWaitStatus;
     HANDLE dwChangeHandle;
 
+    LPCTSTR screenshotdir = UD.screenshotdirectory.c_str();
+
     dwChangeHandle = FindFirstChangeNotification(
-        (LPCWSTR)&ScreenshotDirPath,
+        screenshotdir,
         FALSE, // watch subtree 
         FILE_NOTIFY_CHANGE_FILE_NAME);
 
@@ -175,23 +177,6 @@ VOID OpenScreenshotsDirectory()
         SW_SHOWDEFAULT);
 }
 
-BOOL GetScreenshotsDirectoryPath()
-{
-    if (FAILED(SHGetFolderPath(NULL,
-        CSIDL_APPDATA | CSIDL_FLAG_CREATE,
-        NULL, 0, ScreenshotDirPath))) {
-
-        //couldn't get root path
-        MessageBox(NULL,
-            _T("SHGetFolderPath failed."),
-            _T("Error"), MB_OK);
-        return FALSE;
-    }
-
-    PathAppend(ScreenshotDirPath, TEXT("\\.minecraft\\screenshots"));
-
-    return TRUE;
-}
 
 
 
@@ -205,8 +190,6 @@ HANDLE hThread;
 
 BOOL StartWatchingDirectory()
 {
-    GetScreenshotsDirectoryPath();
-
     InitUploadLists();
 
     hThread = CreateThread(NULL, 0,

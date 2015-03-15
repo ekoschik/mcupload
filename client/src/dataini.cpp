@@ -11,6 +11,117 @@
 
 WCHAR   IniFilePath[MAX_PATH];
 WCHAR   ApplicationDirectoryPath[MAX_PATH];
+USERDATA UD;
+
+LPCWSTR keynames[] = {
+    _T("username"), 
+    _T("world"), 
+    _T("servername"), 
+    _T("port"), 
+    _T("screenshotdirectory"),
+};
+
+
+LPCWSTR appname = _T("mcupload");
+
+LPWSTR DefaultScreenshotDir()
+{
+    WCHAR wcharbuf[1000];
+    if (FAILED(SHGetFolderPath(NULL,
+        CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+        NULL, 0, wcharbuf))) {
+        Error(_T("SHGetFolderPath failed."));
+    }
+    PathAppend(wcharbuf, TEXT("\\.minecraft\\screenshots"));
+    return wcharbuf;
+}
+
+VOID InitDefaultValues()
+{
+    UD.username = _T("");
+    UD.world = _T("defworld");
+    UD.servername = _T("localhost");
+    UD.port = _T("3000");
+
+    WCHAR wcharbuf[1000];
+    if (FAILED(SHGetFolderPath(NULL,
+        CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+        NULL, 0, wcharbuf))) {
+        Error(_T("SHGetFolderPath failed."));
+    }
+    PathAppend(wcharbuf, TEXT("\\.minecraft\\screenshots"));
+    UD.screenshotdirectory = wcharbuf;
+}
+
+VOID WriteDataToFile()
+{
+    WritePrivateProfileString(appname, keynames[username], UD.username.c_str(), IniFilePath);
+    WritePrivateProfileString(appname, keynames[world], UD.world.c_str(), IniFilePath);
+    WritePrivateProfileString(appname, keynames[servername], UD.servername.c_str(), IniFilePath);
+    WritePrivateProfileString(appname, keynames[port], UD.port.c_str(), IniFilePath);
+    WritePrivateProfileString(appname, keynames[screenshotdirectory], UD.screenshotdirectory.c_str(), IniFilePath);
+
+}
+
+VOID ReadContentsFromFile()
+{
+    WCHAR wcharbuf[1000];
+    int ret;
+
+    if (GetPrivateProfileString(
+        appname, keynames[username],
+        _T(""), wcharbuf, 1000, IniFilePath) > 0) {
+        UD.username = wcharbuf;
+    }
+    if (GetPrivateProfileString(
+        appname, keynames[world],
+        _T(""), wcharbuf, 1000, IniFilePath) > 0) {
+        UD.world = wcharbuf;
+    }
+    if (GetPrivateProfileString(
+        appname, keynames[servername],
+        _T(""), wcharbuf, 1000, IniFilePath) > 0) {
+        UD.servername = wcharbuf;
+    }
+    if (GetPrivateProfileString(
+        appname, keynames[port],
+        _T(""), wcharbuf, 1000, IniFilePath) > 0) {
+        UD.port = wcharbuf;
+    }
+    if (GetPrivateProfileString(
+        appname, keynames[screenshotdirectory],
+        _T(""), wcharbuf, 1000, IniFilePath) > 0) {
+        UD.screenshotdirectory = wcharbuf;
+    }
+
+}
+//
+//
+//BOOL SetKey(LPCWSTR key, LPCWSTR val)
+//{
+//    return WritePrivateProfileString(
+//        TEXT("MCuploader"), key, val, IniFilePath);
+//}
+//
+//BOOL GetKey(LPCWSTR key, LPWSTR out)
+//{
+//    ZeroMemory(out, MAX_PATH);
+//
+//    int ret = GetPrivateProfileString(
+//        TEXT("MCuploader"), key,
+//        TEXT(""), //default value 
+//        out, MAX_PATH,
+//        IniFilePath);
+//
+//    return ret > 0;
+//}
+//
+//VOID ResetDataIni()
+//{
+//
+//
+//
+//}
 
 BOOL InitDataFile()
 {
@@ -43,41 +154,13 @@ BOOL InitDataFile()
 
     //Initialize IniFilePath
     PathAppend(IniFilePath, TEXT("\\data.ini"));
+    InitDefaultValues();
+    ReadContentsFromFile();
 
     return TRUE;
 }
 
-BOOL SetKey(LPCWSTR key, LPCWSTR val)
-{
-    return WritePrivateProfileString(
-        TEXT("MCuploader"), key, val, IniFilePath);
-}
-
-BOOL GetKey(LPCWSTR key, LPWSTR out)
-{
-    ZeroMemory(out, MAX_PATH);
-
-    int ret = GetPrivateProfileString(
-        TEXT("MCuploader"), key,
-        TEXT(""), //default value 
-        out, MAX_PATH,
-        IniFilePath);
-
-    return ret > 0;
-}
 
 
 
 
-VOID ResetDataIni()
-{
-    //Delete data.ini
-    if (!DeleteFile(IniFilePath)) {
-        Error(TEXT("Remove data.iniFailed"));
-    }
-
-    bUsernameSet = FALSE;
-
-    InvalidateRect(hMainWnd, NULL, TRUE);
-
-}
