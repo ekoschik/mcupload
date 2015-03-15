@@ -75,7 +75,11 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         //Hide();
         break;
     }
-        
+
+    case WM_NOTIFY:
+        return(NotifyHandler(hWnd, message, wParam, lParam));
+        break;
+    
     case WM_MOUSEMOVE:
     {
 

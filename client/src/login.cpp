@@ -20,6 +20,17 @@ WNDPROC OldUsernameEditWndProc;
 WNDPROC OldWorldEditWndProc;
 
 
+VOID HideEditControls()
+{
+    SetWindowPos(hLoginUsernameEditControl, NULL,
+        0, 0, 0, 0, SWP_HIDEWINDOW);
+
+    SetWindowPos(hLoginWorldEditControl, NULL,
+        0, 0, 0, 0, SWP_HIDEWINDOW);
+}
+
+extern VOID OffThreadProcessDirectoryChange();
+
 VOID Login_Commit()
 {
     GetWindowText(hLoginUsernameEditControl, Username, MAX_PATH);
@@ -28,21 +39,16 @@ VOID Login_Commit()
     SetKey(TEXT("username"), (LPWSTR)&Username);
     SetKey(TEXT("world"), (LPWSTR)&World);
 
+    //Go to the main window
     bUsernameSet = TRUE;
+    bSettingsView = FALSE;
+
+    HideEditControls();
 
     //Logging in kicks off one directory sweep
-    ProcessDirectoryChange();
+    OffThreadProcessDirectoryChange();
 
     InvalidateRect(hwndMain, NULL, TRUE);
-}
-
-VOID HideEditControls()
-{
-    SetWindowPos(hLoginUsernameEditControl, NULL,
-        0, 0, 0, 0, SWP_HIDEWINDOW);
-
-    SetWindowPos(hLoginWorldEditControl, NULL,
-        0, 0, 0, 0, SWP_HIDEWINDOW);
 }
 
 INT_PTR CALLBACK EmailEditControlWndProc(
@@ -173,8 +179,13 @@ BOOL Init_Login(HWND hWnd)
     return FALSE;
 }
 
+extern RECT rcWindow; 
+extern HBRUSH hbackground;
 VOID Draw_Login(HWND hWnd, HDC hdc)
 {
+
+    FillRect(hdc, &rcWindow, hbackground);
+
     LPWSTR strHeader = TEXT("Hey there, looks like you're new.");
     LPWSTR strUsername = TEXT("MC username:");
     LPWSTR strWorldName = TEXT("World Name:");

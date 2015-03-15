@@ -45,6 +45,8 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
     }
 
     InvalidateRect(hMainWnd, NULL, TRUE);
+
+    RefreshListView();
 }
 
 
@@ -91,6 +93,23 @@ VOID ProcessDirectoryChange()
     return;
 }
 
+//Syntax Glue
+DWORD WINAPI OffThreadProcessDirectoryChange1(_In_ LPVOID lpParameter) {
+    ProcessDirectoryChange();
+    return 0;
+}
+
+//Calling Process Directory Change from the UI 
+//thread when logging in creates a single use 
+//worker thread
+VOID OffThreadProcessDirectoryChange()
+{
+    if (CreateThread(NULL, 0,
+        OffThreadProcessDirectoryChange1,
+        NULL, 0, NULL) == NULL) {
+        Error(_T("OffThreadProcessDirectoryChange failed."));
+    }
+}
 
 
 //

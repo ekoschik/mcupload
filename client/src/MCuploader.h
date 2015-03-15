@@ -17,6 +17,10 @@ __inline VOID Error(LPWSTR msg) {
     MessageBox(NULL, msg, _T("Error"), MB_OK);
 }
 
+
+BOOL RefreshListView();
+LRESULT NotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 //window.cpp
 BOOL InitializeMainWindow(HWND hWnd);
 VOID    DrawMainWindow(HWND hwnd, HDC hdc);
@@ -32,6 +36,7 @@ extern int window_height;
 extern HFONT hFontHeader;
 extern HFONT hFontNormal;
 extern HFONT hFontSmall;
+extern BOOL bSettingsView;
 
 //watch.cpp
 BOOL    StartWatchingDirectory();

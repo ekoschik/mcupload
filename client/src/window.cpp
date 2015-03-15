@@ -20,6 +20,41 @@ HFONT hFontHeader;
 HFONT hFontNormal;
 HFONT hFontSmall;
 
+
+//
+// Login View (login.cpp)
+//
+
+BOOL Init_Login(HWND hWnd);
+VOID Draw_Login(HWND hWnd, HDC hdc);
+VOID Login_Commit();
+VOID HideEditControls();
+extern RECT rcLoginEnterButtonFrame;
+extern HWND hLoginUsernameEditControl;
+extern HWND hLoginWorldEditControl;
+//
+// Main View (mainview.cpp)
+//
+
+BOOL Init_MainView(HWND hWnd);
+VOID Draw_MainView(HWND hWnd, HDC hdc);
+extern RECT rctextSettings;
+extern RECT rcScreenshotsDirectoryLink;
+extern HWND hWndListView;
+
+//
+// Settings View (settings.cpp)
+//
+
+BOOL Init_Settings(HWND hWnd);
+VOID Draw_Settings(HWND hWnd, HDC hdc);
+extern RECT rctextBack;
+extern RECT rctextResetButton;
+
+//
+// Initialization
+//
+
 VOID Init_Shared()
 {
     hbackground = CreateSolidBrush(RGB(199, 192, 237));
@@ -41,34 +76,23 @@ VOID Init_Shared()
 
 }
 
+BOOL InitializeMainWindow(HWND hWnd)
+{
+    hwndMain = hWnd;
 
-//
-// Login View (login.cpp)
-//
+    if (!InitDataFile()) {
+        return FALSE;
+    }
 
-BOOL Init_Login(HWND hWnd);
-VOID Draw_Login(HWND hWnd, HDC hdc);
-VOID Login_Commit();
-VOID HideEditControls();
-extern RECT rcLoginEnterButtonFrame;
+    Init_Shared();
+    Init_Login(hWnd);
+    Init_Settings(hWnd);
+    Init_MainView(hWnd);
 
-//
-// Main View (mainview.cpp)
-//
+    return TRUE;
+}
 
-BOOL Init_MainView(HWND hWnd);
-VOID Draw_MainView(HWND hWnd, HDC hdc);
-extern RECT rctextSettings;
-extern RECT rcScreenshotsDirectoryLink;
 
-//
-// Settings View (settings.cpp)
-//
-
-BOOL Init_Settings(HWND hWnd);
-VOID Draw_Settings(HWND hWnd, HDC hdc);
-extern RECT rctextBack;
-extern RECT rctextResetButton;
 
 
 //
@@ -78,7 +102,11 @@ extern RECT rctextResetButton;
 VOID DrawMainWindow(HWND hWnd, HDC hdc)
 {
     SetBkMode(hdc, TRANSPARENT);
+
     HideEditControls();
+    ShowWindow(hWndListView, SW_HIDE);
+    ShowWindow(hLoginWorldEditControl, SW_HIDE);
+    ShowWindow(hLoginUsernameEditControl, SW_HIDE);
 
     //Draw background, save RECT to rcWindow
     GetClientRect(hWnd, &rcWindow);
@@ -138,25 +166,3 @@ VOID KeyPressed(HWND hWnd, WPARAM wParam)
     }
 
 }
-
-
-//
-// Initialization
-//
-
-BOOL InitializeMainWindow(HWND hWnd)
-{
-    hwndMain = hWnd;
-    
-    if (!InitDataFile()) {
-        return FALSE;
-    }
-
-    Init_Shared();
-    Init_Login(hWnd);
-    Init_Settings(hWnd);
-    Init_MainView(hWnd);
-
-    return TRUE;
-}
-

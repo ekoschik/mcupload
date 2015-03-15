@@ -33,6 +33,9 @@ VOID InitUploadLists()
     while (std::getline(hFile_ignore, line))
         IgnoreList.push_back(line);
 
+
+    RefreshListView();
+
 }
 
 BOOL IsFilenameInIgnoreList(LPCWSTR filename)
@@ -96,6 +99,7 @@ VOID AddFileToSuccessList(LPCWSTR filename)
         sprintf((char*)&buf, "%s\n", it->c_str());
         hFile.write(buf, strlen(buf));
     }
+
 }
 
 VOID AddFileToIgnoreList(LPCWSTR filename)
