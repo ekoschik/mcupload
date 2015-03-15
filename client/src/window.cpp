@@ -33,6 +33,19 @@ HFONT hFontHeader;
 HFONT hFontNormal;
 HFONT hFontSmall;
 
+VOID OpenWorldPageInBrowser()
+{
+    WCHAR ScreenshotsWebPage[2000] = { 0 };
+    wsprintf((LPWSTR)&ScreenshotsWebPage, L"http://%s:%s/screenshots", 
+        UD.servername.c_str(), UD.port.c_str());
+
+    LPWSTR webpage = (LPWSTR)&ScreenshotsWebPage;
+
+    ShellExecute(NULL, _T("open"), webpage,
+        NULL, NULL, SW_SHOWNORMAL);
+}
+
+
 
 //
 // Login View (login.cpp)
@@ -54,6 +67,7 @@ VOID Draw_MainView(HWND hWnd, HDC hdc);
 extern RECT rctextSettings;
 extern RECT rcScreenshotsDirectoryLink;
 extern HWND hWndListView;
+extern RECT rctextViewOnWeb;
 
 //
 // Settings View (settings.cpp)
@@ -162,6 +176,9 @@ VOID MouseClick(POINT pt)
         }
         if (PtInRect(&rcScreenshotsDirectoryLink, pt)) {
             OpenScreenshotsDirectory();
+        }
+        if (PtInRect(&rctextViewOnWeb, pt)) {
+            OpenWorldPageInBrowser();
         }
     }
 }

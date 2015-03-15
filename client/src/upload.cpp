@@ -9,7 +9,8 @@
 
 using namespace std;
 
-#define RECEIVER   "/upload"
+#define RECEIVER   "/screenshots"
+
 
 CHAR ipbuf[1000];
 const char* ReadIP() {

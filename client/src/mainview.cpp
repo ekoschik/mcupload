@@ -9,6 +9,9 @@ RECT rctextUsername;
 RECT rctextWorld;
 RECT rcNumUploaded;
 
+RECT rctextViewOnWeb;
+HBRUSH hbrViewOnWeb;
+
 RECT rcListView;
 HBRUSH hbrListViewBackground;
 HWND hWndListView;
@@ -121,6 +124,7 @@ BOOL Init_ListView(HWND hWnd)
 }
 
 
+
 BOOL Init_MainView(HWND hWnd)
 {
     SetRect(&rctextSettings, 340, 10, 400, 30);
@@ -131,6 +135,8 @@ BOOL Init_MainView(HWND hWnd)
 
     SetRect(&rcNumUploaded, 250, 218, 390, 240);
 
+    SetRect(&rctextViewOnWeb, 250, 190, 390, 210);
+    hbrViewOnWeb = CreateSolidBrush(RGB(209, 216, 89));
     hbrListViewBackground = CreateSolidBrush(RGB(255, 255, 255));
 
     Init_ListView(hWnd);
@@ -159,6 +165,14 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     wsprintf((LPWSTR)&strSizeCounter, TEXT("# Uploaded: %d [%d]"), GetNumSuccess(), GetNumFailed());
     SelectObject(hdc, hFontNormal);
     DrawText(hdc, strSizeCounter, wcslen(strSizeCounter), &rcNumUploaded, DT_TOP | DT_LEFT);
+    
+
+    //View On Web Button
+    SelectObject(hdc, hFontNormal);
+    WCHAR strViewOnWeb[100];
+    wsprintf((LPWSTR)&strViewOnWeb, TEXT("View On Web"));
+    FillRect(hdc, &rctextViewOnWeb, hbrViewOnWeb);
+    DrawText(hdc, strViewOnWeb, wcslen(strViewOnWeb), &rctextViewOnWeb, DT_VCENTER | DT_CENTER);
     
 
     int i = 1;
