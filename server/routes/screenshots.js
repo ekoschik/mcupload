@@ -9,7 +9,9 @@ module.exports = function(router, models) {
     router.get('/', function(req, res) {
         // we want to render a page with links to all of the screenshots uploaded
 
-        models.Image.findAll().then(function(images) {
+        models.Image.findAll({
+            order: 'createdAt DESC'
+        }).then(function(images) {
             res.render('screenshots.jade', { title: 'Screenshots', 'images': images });
         }).error(function(e) {
             res.sendStatus(500);
