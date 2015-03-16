@@ -22,6 +22,7 @@ __inline VOID Error(LPWSTR msg) {
 VOID SetLoginEditControlsFromUD();
 BOOL RefreshListView();
 LRESULT NotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID TogglePause();
 
 //window.cpp
 BOOL InitializeMainWindow(HWND hWnd);
@@ -40,6 +41,7 @@ extern HFONT hFontNormal;
 extern HFONT hFontSmall;
 extern BOOL bSettingsView;
 extern BOOL bSetupView;
+extern BOOL bPaused;
 #define LOGINVIEW       (bSetupView)
 #define SETTINGSVIEW    (!bSetupView && bSettingsView)
 #define NORMALVIEW      (!LOGINVIEW && !SETTINGSVIEW)
@@ -49,12 +51,16 @@ BOOL    StartWatchingDirectory();
 BOOL    StopWatchingDirectory();
 LPCWSTR GetWatchedDirectory();
 VOID    ProcessDirectoryChange();
+extern BOOL bLastConnectionSuccessfull;
+VOID OffThreadProcessDirectoryChange();
 
 //upload.cpp
 BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket);
 SOCKET GetSocket();
 unsigned short ReadPort();
 const char* ReadIP();
+VOID CloseConnection(SOCKET Socket);
+
 
 //uploadlists.cpp
 VOID    InitUploadLists();

@@ -16,6 +16,11 @@ RECT rcListView;
 HBRUSH hbrListViewBackground;
 HWND hWndListView;
 
+RECT rcConnectionLight;
+HBRUSH hbrConnectionRed;
+HBRUSH hbrConnectionYellow;
+HBRUSH hbrConnectionGreen;
+
 #define MAX_LISTSIZE 100
 #define MAX_STR 1000
 
@@ -24,6 +29,31 @@ typedef struct myLISTVIEWITEM {
     WCHAR strName[MAX_STR];
 } LISTVIEWITEM;
 LISTVIEWITEM ListViewBuffer[MAX_LISTSIZE];
+
+
+BOOL bPaused;
+VOID TogglePause() {
+    if (bLastConnectionSuccessfull) {
+        bPaused = !bPaused;
+
+        if (!bPaused) {
+            OffThreadProcessDirectoryChange();
+        }
+
+    }
+    InvalidateRect(hMainWnd, &rcConnectionLight, TRUE);
+}
+HBRUSH GetConnectionStateBrush() {
+    if (!bLastConnectionSuccessfull) {
+        return hbrConnectionRed;
+    }
+    if (bPaused) {
+        return hbrConnectionYellow;
+    }
+    return hbrConnectionGreen;
+}
+
+
 
 LRESULT NotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -139,11 +169,16 @@ BOOL Init_MainView(HWND hWnd)
     hbrViewOnWeb = CreateSolidBrush(RGB(209, 216, 89));
     hbrListViewBackground = CreateSolidBrush(RGB(255, 255, 255));
 
+    SetRect(&rcConnectionLight, 310, 10, 325, 25);
+    hbrConnectionRed = CreateSolidBrush(RGB(255, 48, 48));
+    hbrConnectionYellow = CreateSolidBrush(RGB(247, 255, 18));
+    hbrConnectionGreen = CreateSolidBrush(RGB(0, 212, 0));
+
+
     Init_ListView(hWnd);
 
     return TRUE;
 }
-
 
 
 VOID Draw_MainView(HWND hWnd, HDC hdc)
@@ -174,8 +209,9 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     FillRect(hdc, &rctextViewOnWeb, hbrViewOnWeb);
     DrawText(hdc, strViewOnWeb, wcslen(strViewOnWeb), &rctextViewOnWeb, DT_VCENTER | DT_CENTER);
     
+    SelectBrush(hdc, GetConnectionStateBrush());
+    Ellipse(hdc, rcConnectionLight.left, rcConnectionLight.top, rcConnectionLight.right, rcConnectionLight.bottom);
 
-    int i = 1;
 }
 
 

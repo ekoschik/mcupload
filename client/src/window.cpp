@@ -68,6 +68,7 @@ extern RECT rctextSettings;
 extern RECT rcScreenshotsDirectoryLink;
 extern HWND hWndListView;
 extern RECT rctextViewOnWeb;
+extern RECT rcConnectionLight;
 
 //
 // Settings View (settings.cpp)
@@ -179,6 +180,9 @@ VOID MouseClick(POINT pt)
         }
         if (PtInRect(&rctextViewOnWeb, pt)) {
             OpenWorldPageInBrowser();
+        }
+        if (PtInRect(&rcConnectionLight, pt)) {
+            TogglePause();
         }
     }
 }
