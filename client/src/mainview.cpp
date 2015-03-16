@@ -21,6 +21,8 @@ HBRUSH hbrConnectionRed;
 HBRUSH hbrConnectionYellow;
 HBRUSH hbrConnectionGreen;
 
+RECT rctextChangeName;
+
 #define MAX_LISTSIZE 100
 #define MAX_STR 1000
 
@@ -169,10 +171,12 @@ BOOL Init_MainView(HWND hWnd)
     hbrViewOnWeb = CreateSolidBrush(RGB(209, 216, 89));
     hbrListViewBackground = CreateSolidBrush(RGB(255, 255, 255));
 
-    SetRect(&rcConnectionLight, 310, 10, 325, 25);
+    SetRect(&rcConnectionLight, 315, 10, 330, 25);
     hbrConnectionRed = CreateSolidBrush(RGB(255, 48, 48));
     hbrConnectionYellow = CreateSolidBrush(RGB(247, 255, 18));
     hbrConnectionGreen = CreateSolidBrush(RGB(0, 212, 0));
+
+    SetRect(&rctextChangeName, 200, 10, 310, 30);
 
 
     Init_ListView(hWnd);
@@ -211,6 +215,12 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     
     SelectBrush(hdc, GetConnectionStateBrush());
     Ellipse(hdc, rcConnectionLight.left, rcConnectionLight.top, rcConnectionLight.right, rcConnectionLight.bottom);
+
+    //Change Name/ Server
+    SelectObject(hdc, hFontSmall);
+    LPWSTR strChangeName = TEXT("Change Name/ Server");
+    DrawText(hdc, strChangeName, wcslen(strChangeName), &rctextChangeName, DT_TOP | DT_LEFT);
+
 
 }
 

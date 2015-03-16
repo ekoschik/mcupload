@@ -123,3 +123,31 @@ __inline std::string ToStr(LPCWSTR in)
     std::string out = buf;
     return out;
 }
+
+
+// Login View (login.cpp)
+BOOL Init_Login(HWND hWnd);
+VOID Draw_Login(HWND hWnd, HDC hdc);
+VOID Login_Commit();
+VOID HideEditControls();
+extern RECT rcLoginEnterButtonFrame;
+//extern HWND hLoginUsernameEditControl;
+//extern HWND hLoginWorldEditControl;
+
+
+// Main View (mainview.cpp)
+BOOL Init_MainView(HWND hWnd);
+VOID Draw_MainView(HWND hWnd, HDC hdc);
+extern RECT rctextSettings;
+extern RECT rcScreenshotsDirectoryLink;
+extern HWND hWndListView;
+extern RECT rctextViewOnWeb;
+extern RECT rcConnectionLight;
+extern RECT rctextChangeName;
+
+// Settings View (settings.cpp)
+BOOL Init_Settings(HWND hWnd);
+VOID Draw_Settings(HWND hWnd, HDC hdc);
+extern RECT rctextBack;
+extern RECT rctextResetButton;
+

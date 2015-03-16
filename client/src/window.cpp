@@ -3,6 +3,7 @@
 #include "MCuploader.h"
 #define IDD_EMAIL    100101
 
+
 int window_width = 400;
 int window_height = 250;
 
@@ -11,18 +12,26 @@ RECT rcWindow;
 BOOL bSettingsView = FALSE;
 BOOL bSetupView = FALSE;
 
+VOID HideEverything() {
+    HideEditControls();
+    ShowWindow(hWndListView, SW_HIDE);
+}
+
 VOID GoToSettings() {
+    HideEverything();
     bSettingsView = TRUE;
     bSetupView = FALSE;
     InvalidateRect(hMainWnd, NULL, TRUE);
 }
 VOID GoToSetup() {
+    HideEverything();
     bSettingsView = FALSE;
     bSetupView = TRUE;
     SetLoginEditControlsFromUD();
     InvalidateRect(hMainWnd, NULL, TRUE);
 }
 VOID GoToMainView() {
+    HideEverything();
     bSettingsView = FALSE;
     bSetupView = FALSE;
     InvalidateRect(hMainWnd, NULL, TRUE);
@@ -45,39 +54,6 @@ VOID OpenWorldPageInBrowser()
         NULL, NULL, SW_SHOWNORMAL);
 }
 
-
-
-//
-// Login View (login.cpp)
-//
-
-BOOL Init_Login(HWND hWnd);
-VOID Draw_Login(HWND hWnd, HDC hdc);
-VOID Login_Commit();
-VOID HideEditControls();
-extern RECT rcLoginEnterButtonFrame;
-//extern HWND hLoginUsernameEditControl;
-//extern HWND hLoginWorldEditControl;
-//
-// Main View (mainview.cpp)
-//
-
-BOOL Init_MainView(HWND hWnd);
-VOID Draw_MainView(HWND hWnd, HDC hdc);
-extern RECT rctextSettings;
-extern RECT rcScreenshotsDirectoryLink;
-extern HWND hWndListView;
-extern RECT rctextViewOnWeb;
-extern RECT rcConnectionLight;
-
-//
-// Settings View (settings.cpp)
-//
-
-BOOL Init_Settings(HWND hWnd);
-VOID Draw_Settings(HWND hWnd, HDC hdc);
-extern RECT rctextBack;
-extern RECT rctextResetButton;
 
 //
 // Initialization
@@ -131,8 +107,6 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 {
     SetBkMode(hdc, TRANSPARENT);
 
-    HideEditControls();
-    ShowWindow(hWndListView, SW_HIDE);
 
 
     //Draw background, save RECT to rcWindow
@@ -168,9 +142,6 @@ VOID MouseClick(POINT pt)
         if (PtInRect(&rctextBack, pt)) {
             GoToMainView();
         }
-        if (PtInRect(&rctextResetButton, pt)) {
-            GoToSetup();
-        }
     } else {
         if (PtInRect(&rctextSettings, pt)) {
             GoToSettings();
@@ -183,6 +154,9 @@ VOID MouseClick(POINT pt)
         }
         if (PtInRect(&rcConnectionLight, pt)) {
             TogglePause();
+        }
+        if (PtInRect(&rctextChangeName, pt)) {
+            GoToSetup();
         }
     }
 }
