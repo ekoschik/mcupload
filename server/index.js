@@ -49,6 +49,7 @@ function loadRoutes(base) {
             } else {
                 // remove the extension, remove the base directory name
                 var routeName = routePath.substr(0, routePath.indexOf('.')).substr(base.length);
+				routeName = routeName.replace(/\\/g, '/')
                 if (routeName === '/index') {
                     routeName = '/';
                 }
@@ -60,7 +61,7 @@ function loadRoutes(base) {
 
                 console.log('using route ' + routeName);
                 // replace backslash with forward slash, fix for windows
-                app.use(routeName.replace(/\\/g, '/'), router);
+                app.use(routeName, router);
             }
         });
     })(base);

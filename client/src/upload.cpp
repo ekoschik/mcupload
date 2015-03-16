@@ -127,8 +127,11 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket)
     char* retStatus = buffer + 9;
     BOOL success = (retStatus[0] == '2');
 
-    //Cleanup and return error code
+    return success;
+}
+
+VOID CloseConnection(SOCKET Socket)
+{
     closesocket(Socket);
     WSACleanup();
-    return success;
 }

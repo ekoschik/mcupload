@@ -5,48 +5,99 @@
 #include <fstream>
 #include <string>
 
+WCHAR   ScreenshotDirPath[MAX_PATH];
 
-VOID FlushPending()
+
+VOID RetryAllFailed()
 {
-    for (auto it = PendingList.begin(); it != PendingList.end(); ++it) {
-        SOCKET Socket = GetSocket();
-        if (Socket == NULL) {
-            return;
-        }
-
-        //TODO: string->wstr and create filepath
-
-        //if (UploadFile(filepath, filename, Socket)) {
-        //    RemoveFileFromPending(filename);
-        //    AddFileToSuccessList(filename);
-        //}
+    for (std::string str : FailedList) {
+        PendingList.push_back(str);
     }
+    FailedList.clear();
+    OffThreadProcessDirectoryChange();
+    RefreshListView();
+    InvalidateRect(hMainWnd, NULL, TRUE);
 }
 
-VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
+VOID IgnoreAllFailed()
 {
-    if (IsFilenameInIgnoreList(filename) ||
-        IsFilenameInFailedList(filename) ||
-        IsFilenameInPendingList(filename) ||
-        IsFilenameInSuccessList(filename)) {
-        return;
+    for (std::string str : FailedList) {
+        AddFileToIgnoreList_Str(str);
     }
+    FailedList.clear();
+    RefreshListView();
+    SwitchToSuccessList();
+    InvalidateRect(hMainWnd, NULL, TRUE);
+}
 
-    SOCKET Socket = GetSocket();
-    if (Socket == NULL) {
-        AddFileToPendingList(filename);
-        return;
-    }
-
+VOID UploadFile(SOCKET Socket, LPCWSTR filepath, LPCWSTR filename)
+{ 
     if (UploadFile(filepath, filename, Socket)) {
         AddFileToSuccessList(filename);
-    } else {
+    }
+    else {
         AddFileToFailedList(filename);
     }
 
     InvalidateRect(hMainWnd, NULL, TRUE);
 
     RefreshListView();
+
+}
+
+VOID FlushPending()
+{
+    SOCKET Socket = GetSocket();
+    
+    while (Socket != NULL && 
+           !bPaused &&
+           PendingList.size() > 0) {
+
+        //Get filename and filepath from Pending list
+        std::string filename = PendingList[0].c_str();
+        WCHAR wcharFilename[1000];
+        mbstowcs((WCHAR*)&wcharFilename, 
+            PendingList[0].c_str(), 1000);
+        WCHAR wcharFilePath[1000];
+        wsprintf((WCHAR*)wcharFilePath, _T("%s\\%s"),
+            UD.screenshotdirectory.c_str(), wcharFilename);
+        LPCWSTR wstrfilename = (LPCWSTR)&wcharFilename;
+        LPCWSTR wstrfilepath = (LPCWSTR)&wcharFilePath;
+
+        //Upload File, which puts file in success or failure list
+        UploadFile(Socket, wstrfilepath, wstrfilename);
+
+        PendingList.erase(PendingList.begin());
+    }
+
+    CloseConnection(Socket);
+
+}
+
+BOOL bLastConnectionSuccessfull;
+VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
+{
+    //Test connection status
+    SOCKET Socket = GetSocket();
+    bLastConnectionSuccessfull = (Socket != NULL);
+   
+    if (!bLastConnectionSuccessfull || bPaused) {
+        AddFileToPendingList(filename);
+        return;
+    }
+
+    FlushPending();
+    
+    //Check already handled filenames
+    if (IsFilenameInIgnoreList(filename) ||
+        IsFilenameInFailedList(filename) ||
+        IsFilenameInSuccessList(filename)) {
+        return;
+    }
+
+    UploadFile(Socket, filepath, filename);
+
+    CloseConnection(Socket);
 }
 
 
@@ -165,7 +216,6 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
 // \user\.minecraft\screenshots
 //
 
-WCHAR   ScreenshotDirPath[MAX_PATH];
 
 VOID OpenScreenshotsDirectory()
 {
@@ -190,6 +240,7 @@ HANDLE hThread;
 
 BOOL StartWatchingDirectory()
 {
+    bLastConnectionSuccessfull = FALSE;
     InitUploadLists();
 
     hThread = CreateThread(NULL, 0,

@@ -22,6 +22,7 @@ __inline VOID Error(LPWSTR msg) {
 VOID SetLoginEditControlsFromUD();
 BOOL RefreshListView();
 LRESULT NotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID TogglePause();
 
 //window.cpp
 BOOL InitializeMainWindow(HWND hWnd);
@@ -40,6 +41,7 @@ extern HFONT hFontNormal;
 extern HFONT hFontSmall;
 extern BOOL bSettingsView;
 extern BOOL bSetupView;
+extern BOOL bPaused;
 #define LOGINVIEW       (bSetupView)
 #define SETTINGSVIEW    (!bSetupView && bSettingsView)
 #define NORMALVIEW      (!LOGINVIEW && !SETTINGSVIEW)
@@ -49,12 +51,18 @@ BOOL    StartWatchingDirectory();
 BOOL    StopWatchingDirectory();
 LPCWSTR GetWatchedDirectory();
 VOID    ProcessDirectoryChange();
+extern BOOL bLastConnectionSuccessfull;
+VOID OffThreadProcessDirectoryChange();
+VOID IgnoreAllFailed();
+VOID RetryAllFailed();
 
 //upload.cpp
 BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket);
 SOCKET GetSocket();
 unsigned short ReadPort();
 const char* ReadIP();
+VOID CloseConnection(SOCKET Socket);
+
 
 //uploadlists.cpp
 VOID    InitUploadLists();
@@ -66,6 +74,7 @@ VOID    AddFileToPendingList(LPCWSTR filename);
 VOID    AddFileToSuccessList(LPCWSTR filename);
 VOID    AddFileToFailedList(LPCWSTR filename);
 VOID    AddFileToIgnoreList(LPCWSTR filename);
+VOID    AddFileToIgnoreList_Str(std::string file);
 VOID    RemoveFileFromPending(LPCWSTR filename);
 int     GetNumFailed();
 int     GetNumSuccess();
@@ -117,3 +126,38 @@ __inline std::string ToStr(LPCWSTR in)
     std::string out = buf;
     return out;
 }
+
+
+// Login View (login.cpp)
+BOOL Init_Login(HWND hWnd);
+VOID Draw_Login(HWND hWnd, HDC hdc);
+VOID Login_Commit();
+VOID HideEditControls();
+extern RECT rcLoginEnterButtonFrame;
+//extern HWND hLoginUsernameEditControl;
+//extern HWND hLoginWorldEditControl;
+
+
+// Main View (mainview.cpp)
+BOOL Init_MainView(HWND hWnd);
+VOID Draw_MainView(HWND hWnd, HDC hdc);
+extern RECT rctextSettings;
+extern RECT rcScreenshotsDirectoryLink;
+extern HWND hWndListView;
+extern RECT rctextViewOnWeb;
+extern RECT rcConnectionLight;
+extern RECT rctextChangeName;
+extern RECT rcSuccessList;
+extern RECT rcFailedList;
+VOID SwitchToSuccessList();
+VOID SwitchToFailedList();
+extern RECT rcRetryAll;
+extern RECT rcIgnoreAll;
+extern BOOL bSuccessList;
+
+// Settings View (settings.cpp)
+BOOL Init_Settings(HWND hWnd);
+VOID Draw_Settings(HWND hWnd, HDC hdc);
+extern RECT rctextBack;
+extern RECT rctextResetButton;
+

@@ -30,7 +30,6 @@ VOID HideEditControls()
     ShowWindow(PortEditControl, SW_HIDE);
 }
 
-extern VOID OffThreadProcessDirectoryChange();
 
 VOID Login_Commit()
 {
