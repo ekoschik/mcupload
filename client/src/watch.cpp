@@ -22,32 +22,33 @@ VOID UploadFile(SOCKET Socket, LPCWSTR filepath, LPCWSTR filename)
 
 }
 
-
 VOID FlushPending()
 {
-    for (auto it = PendingList.begin(); 
-        it != PendingList.end(); ++it) {
-        SOCKET Socket = GetSocket();
-        if (Socket == NULL) {
-            return;
-        }
+    SOCKET Socket = GetSocket();
+    
+    while (Socket != NULL && 
+           !bPaused &&
+           PendingList.size() > 0) {
 
-        //Read filename from pending, convert
-        //to wchar, and get full path
-        std::string filename = it->c_str();
+        //Get filename and filepath from Pending list
+        std::string filename = PendingList[0].c_str();
         WCHAR wcharFilename[1000];
-        mbstowcs((WCHAR*)&wcharFilename, it->c_str(), 1000);
+        mbstowcs((WCHAR*)&wcharFilename, 
+            PendingList[0].c_str(), 1000);
         WCHAR wcharFilePath[1000];
         wsprintf((WCHAR*)wcharFilePath, _T("%s\\%s"),
             UD.screenshotdirectory.c_str(), wcharFilename);
+        LPCWSTR wstrfilename = (LPCWSTR)&wcharFilename;
+        LPCWSTR wstrfilepath = (LPCWSTR)&wcharFilePath;
 
-        //Upload File
-        UploadFile(Socket, (LPCWSTR)&wcharFilePath, (LPCWSTR)&wcharFilename);
+        //Upload File, which puts file in success or failure list
+        UploadFile(Socket, wstrfilepath, wstrfilename);
 
-        CloseConnection(Socket);
+        PendingList.erase(PendingList.begin());
     }
 
-    PendingList.clear();
+    CloseConnection(Socket);
+
 }
 
 BOOL bLastConnectionSuccessfull;
@@ -56,24 +57,18 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
     //Test connection status
     SOCKET Socket = GetSocket();
     bLastConnectionSuccessfull = (Socket != NULL);
-    if (!bLastConnectionSuccessfull) {
+   
+    if (!bLastConnectionSuccessfull || bPaused) {
+        AddFileToPendingList(filename);
         return;
     }
 
-    if (!bPaused) {
-        FlushPending();
-    }
-
+    FlushPending();
+    
     //Check already handled filenames
     if (IsFilenameInIgnoreList(filename) ||
         IsFilenameInFailedList(filename) ||
         IsFilenameInSuccessList(filename)) {
-        return;
-    }
-
-    //Add to pending if we cant send now
-    if (bPaused) {
-        AddFileToPendingList(filename);
         return;
     }
 
