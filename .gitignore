@@ -221,3 +221,6 @@ uploads
 
 # Configuration
 local*.json
+
+#Stupid mac files
+.DS_Store
