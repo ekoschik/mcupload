@@ -102,9 +102,9 @@ VOID AddFileToSuccessList(LPCWSTR filename)
 
 }
 
-VOID AddFileToIgnoreList(LPCWSTR filename)
+
+VOID AddFileToIgnoreList_Str(std::string file)
 {
-    std::string file = ToStr(filename);
     IgnoreList.push_back(file);
 
     std::ofstream hFile(filpath_ignore);
@@ -115,6 +115,10 @@ VOID AddFileToIgnoreList(LPCWSTR filename)
         sprintf((char*)&buf, "%s\n", it->c_str());
         hFile.write(buf, strlen(buf));
     }
+}
+VOID AddFileToIgnoreList(LPCWSTR filename)
+{
+    AddFileToIgnoreList_Str(ToStr(filename));
 }
 
 VOID AddFileToPendingList(LPCWSTR filename)

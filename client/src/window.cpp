@@ -161,10 +161,17 @@ VOID MouseClick(POINT pt)
         if (PtInRect(&rcSuccessList, pt)) {
             SwitchToSuccessList();
         }
-        if (PtInRect(&rcFailedList, pt)) {
-            SwitchToFailedList();
+        if (FailedList.size() >  0) {
+            if (PtInRect(&rcFailedList, pt)) {
+                SwitchToFailedList();
+            }
+            if (PtInRect(&rcRetryAll, pt)) {
+                RetryAllFailed();
+            }
+            if (PtInRect(&rcIgnoreAll, pt)) {
+                IgnoreAllFailed();
+            }
         }
-        
             
     }
 }

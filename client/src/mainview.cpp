@@ -42,6 +42,8 @@ BOOL RefreshListView();
 BOOL bSuccessList;
 RECT rcSuccessList;
 RECT rcFailedList;
+RECT rcRetryAll;
+RECT rcIgnoreAll;
 HBRUSH hbrSucess_Selected;
 HBRUSH hbrSucess_NotSelected;
 HBRUSH hbrFailed_Selected;
@@ -208,6 +210,8 @@ BOOL Init_MainView(HWND hWnd)
     hbrSucess_NotSelected = CreateSolidBrush(RGB(159, 212, 159));
     hbrFailed_Selected = CreateSolidBrush(RGB(227, 79, 45));
     hbrFailed_NotSelected = CreateSolidBrush(RGB(222, 140, 122));
+    SetRect(&rcRetryAll, 240, 125, 300, 140);
+    SetRect(&rcIgnoreAll, 240, 145, 300, 165);
 
     bSuccessList = TRUE;
 
@@ -256,18 +260,32 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
 
 
 
-    //Success and Failed list buttons
+    //Success (and Failed list buttons)
     WCHAR strSuccess[100];
-    WCHAR strFailed[100];
     wsprintf((LPWSTR)&strSuccess, TEXT("Success"));
-    wsprintf((LPWSTR)&strFailed, TEXT("Failed"));
     FillRect(hdc, &rcSuccessList, bSuccessList ? 
         hbrSucess_Selected : hbrSucess_NotSelected);
-    FillRect(hdc, &rcFailedList, bSuccessList ? 
-        hbrFailed_NotSelected : hbrFailed_Selected);
     DrawText(hdc, strSuccess, wcslen(strSuccess), &rcSuccessList, DT_VCENTER | DT_CENTER);
-    DrawText(hdc, strFailed, wcslen(strFailed), &rcFailedList, DT_VCENTER | DT_CENTER);
+    
+    if (FailedList.size() >  0) {
 
+        LPRECT lprcSelected = bSuccessList ? &rcSuccessList : &rcFailedList;
+        DrawEdge(hdc, lprcSelected, BDR_RAISEDINNER, BF_RECT);
+
+        WCHAR strFailed[100];
+        wsprintf((LPWSTR)&strFailed, TEXT("Failed"));
+        FillRect(hdc, &rcFailedList, bSuccessList ?
+        hbrFailed_NotSelected : hbrFailed_Selected);
+        DrawText(hdc, strFailed, wcslen(strFailed), &rcFailedList, DT_VCENTER | DT_CENTER);
+
+        SelectObject(hdc, hFontSmall);
+        WCHAR strRetryAll[100];
+        WCHAR strIgnoreAll[100];
+        wsprintf((LPWSTR)&strRetryAll, TEXT("Retry All"));
+        wsprintf((LPWSTR)&strIgnoreAll, TEXT("Ignore All"));
+        DrawText(hdc, strRetryAll, wcslen(strRetryAll), &rcRetryAll, DT_VCENTER | DT_CENTER);
+        DrawText(hdc, strIgnoreAll, wcslen(strIgnoreAll), &rcIgnoreAll, DT_VCENTER | DT_CENTER);
+    }
 
 }
 

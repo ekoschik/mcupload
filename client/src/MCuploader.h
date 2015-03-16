@@ -53,6 +53,8 @@ LPCWSTR GetWatchedDirectory();
 VOID    ProcessDirectoryChange();
 extern BOOL bLastConnectionSuccessfull;
 VOID OffThreadProcessDirectoryChange();
+VOID IgnoreAllFailed();
+VOID RetryAllFailed();
 
 //upload.cpp
 BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket);
@@ -72,6 +74,7 @@ VOID    AddFileToPendingList(LPCWSTR filename);
 VOID    AddFileToSuccessList(LPCWSTR filename);
 VOID    AddFileToFailedList(LPCWSTR filename);
 VOID    AddFileToIgnoreList(LPCWSTR filename);
+VOID    AddFileToIgnoreList_Str(std::string file);
 VOID    RemoveFileFromPending(LPCWSTR filename);
 int     GetNumFailed();
 int     GetNumSuccess();
@@ -148,6 +151,9 @@ extern RECT rcSuccessList;
 extern RECT rcFailedList;
 VOID SwitchToSuccessList();
 VOID SwitchToFailedList();
+extern RECT rcRetryAll;
+extern RECT rcIgnoreAll;
+extern BOOL bSuccessList;
 
 // Settings View (settings.cpp)
 BOOL Init_Settings(HWND hWnd);

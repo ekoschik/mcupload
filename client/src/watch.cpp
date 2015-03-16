@@ -7,6 +7,29 @@
 
 WCHAR   ScreenshotDirPath[MAX_PATH];
 
+
+VOID RetryAllFailed()
+{
+    for (std::string str : FailedList) {
+        PendingList.push_back(str);
+    }
+    FailedList.clear();
+    OffThreadProcessDirectoryChange();
+    RefreshListView();
+    InvalidateRect(hMainWnd, NULL, TRUE);
+}
+
+VOID IgnoreAllFailed()
+{
+    for (std::string str : FailedList) {
+        AddFileToIgnoreList_Str(str);
+    }
+    FailedList.clear();
+    RefreshListView();
+    SwitchToSuccessList();
+    InvalidateRect(hMainWnd, NULL, TRUE);
+}
+
 VOID UploadFile(SOCKET Socket, LPCWSTR filepath, LPCWSTR filename)
 { 
     if (UploadFile(filepath, filename, Socket)) {
