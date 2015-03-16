@@ -82,6 +82,7 @@ extern std::vector<std::string> SuccessList;
 extern std::vector<std::string> IgnoreList;
 extern std::vector<std::string> PendingList;
 extern std::vector<std::string> FailedList;
+VOID DeleteAllUploadLists();
 
 //dataini.cpp
 BOOL    InitDataFile();

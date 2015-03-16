@@ -51,6 +51,9 @@ VOID Login_Commit()
     //Switch view, (which unpauses uploades)
     GoToMainView();
 
+    //Delete lists (server/ name have changed)
+    DeleteAllUploadLists();
+
     //Logging in kicks off one directory sweep
     //  make sure happens after switching to main view
     OffThreadProcessDirectoryChange();

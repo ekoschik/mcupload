@@ -38,6 +38,16 @@ VOID InitUploadLists()
 
 }
 
+VOID DeleteAllUploadLists()
+{
+    DeleteFile(filpath_success);
+    DeleteFile(filpath_ignore);
+    SuccessList.clear();
+    IgnoreList.clear();
+    PendingList.clear();
+    FailedList.clear();
+}
+
 BOOL IsFilenameInIgnoreList(LPCWSTR filename)
 {
     std::string file = ToStr(filename);
