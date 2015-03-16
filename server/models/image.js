@@ -2,16 +2,12 @@
 
 module.exports = function(sequelize, DataTypes) {
   var Image = sequelize.define("Image", {
-    url: {
-        type: DataTypes.TEXT,
-        allowNull: false
-    },
     name: {
         type: DataTypes.TEXT,
         allowNull: false
     },
-    user: {
-        type: DataTypes.STRING,
+    url: {
+        type: DataTypes.TEXT,
         allowNull: false
     },
     hash: {
@@ -21,9 +17,12 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     classMethods: {
-      associate: function(models) {
-        // associations can be defined here
-      }
+        associate: function(models) {
+            Image.belongsTo(models.Player, {
+                allowNull: false,
+                foreignKey: 'player'
+            });
+        }
     }
   });
   return Image;

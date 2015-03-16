@@ -1,8 +1,8 @@
 $(document).ready(function() {
 
-    var host = window.document.location.host;
+    var host = window.document.location.href.replace(/\/$/, '');
 
-    var socket = io.connect(host + '/screenshots');
+    var socket = io.connect(host);
 
     var $body = $('body');
     var $modalOverlay = $('.modal-overlay');

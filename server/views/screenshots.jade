@@ -6,14 +6,13 @@ block content
         ul
             each image in images
                 li
-                    div(class='image' style='background-image: url(screenshots/' + image.url + ');')
-                    //img(src= 'screenshots/' + image.url)
+                    div(class='image' style='background-image: url(/screenshots/' + image.url + ');')
 
     div(class="modal-overlay hidden")
     div(class="modal-content hidden")
         div(class="modal-image")
         div(class="modal-map")
-            iframe(src="http://mc.swellserve.com/map")
+            iframe(src="/map")
 
 block javascript
-    script(src='js/app.js')
+    script(src='/js/app.js')

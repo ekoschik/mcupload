@@ -5,10 +5,9 @@ var Promise   = require('bluebird')
   , _         = require('lodash')
   , path      = require('path')
   , crypto    = require('crypto')
-  , md5       = require('MD5')
   , validate  = require('../lib/validate')
   , uploadDir = require('config').get('uploadDir')
-  , util      = require('util')
+  , UserNotFoundError = require('../lib/errorutils').createError('UserNotFoundError')
   ;
 
 module.exports = function(router, models, io) {
@@ -17,36 +16,50 @@ module.exports = function(router, models, io) {
         console.log('a client has connected: ' + socket);
     });
 
-    router.get('/', function(req, res) {
+    router.get('/', function(req, res, next) {
         models.Image.findAll({
-            order: 'createdAt DESC'
+            order: 'createdAt DESC',
+            attributes: ['url', 'name', 'player', 'createdAt']
         }).then(function(images) {
-            res.render('screenshots.jade', { title: 'Screenshots', 'images': images });
-        }).catch(function(e) {
-            res.sendStatus(500);
-        });
+            // TODO: factor this type of functionality out into some kind
+            // of middleware
+            if (req.accepts('html')) {
+                res.render('screenshots.jade', { title: 'Screenshots', 'images': images });
+            } else if (req.accepts('json')) {
+                res.json({ screenshots: images });
+            } else {
+                res.sendStatus(406);
+            }
+        }).catch(next);
     });
 
     router.get('/upload', function(req, res) {
         res.render('upload_form.jade', { title: 'Upload File' });
     });
 
-    router.get('/:id', function(req, res) {
+    router.get('/:id', function(req, res, next) {
         var id = req.params.id;
-        res.sendFile(id, { root: uploadDir }, function(e) {
-            if (e) {
-                var status = e.status;
-                var message = {
-                    403: 'Forbidden',
-                    404: 'File "' + id + '" was not found.'
-                }[status];
-                res.status(status).json({ status: status, error: message });
-            }
-        });
+        if (req.accepts('html') || req.accepts('image')) {
+            res.sendFile(id, { root: uploadDir }, function(e) {
+                if (e) {
+                    var status = e.status;
+                    var message = {
+                        403: 'Forbidden',
+                        404: 'File "' + id + '" was not found.'
+                    }[status];
+                    res.status(status).json({ status: status, error: message });
+                }
+            });
+        } else if (req.accepts('json')) {
+            models.Image.find({
+                where: { url: id }
+            }).then(res.json.bind(res)).catch(next);
+        }
     });
 
     router.post('/', function(req, res) {
         // TODO: make sure a file was uploaded or a url was given, and a username is given.
+        // TODO: allow a url to be posted and stored
 
         var buffer, filename;
 
@@ -60,11 +73,19 @@ module.exports = function(router, models, io) {
         }
 
         validate.isImage(buffer).then(function() {
+            return models.Player.find({
+                where: { name: req.body.user },
+                attributes: ['uuid']
+            });
+        }).then(function(user) {
+
+            if (user === null) {
+                throw new UserNotFoundError('User ' + req.body.user + ' was not found.');
+            }
 
             var ext  = path.extname(filename)
-              , user = req.body.user
-              , url  = createFileName() + ext
               , hash = md5(buffer)
+              , url  = hash + ext
               ;
 
             console.log('File ' + filename + ' hashed to ' + hash);
@@ -72,7 +93,7 @@ module.exports = function(router, models, io) {
             var imageRec = {
                 url : url
               , name: filename
-              , user: user
+              , player: user.uuid
               , hash: hash
             };
 
@@ -84,6 +105,8 @@ module.exports = function(router, models, io) {
                                                     imageRec.url = getImageUrl(imageRec.url);
                                                     io.emit('screenshot', imageRec);
                                                 });
+        }).catch(UserNotFoundError, function(e) {
+            res.status(401).json({ error: e.message });
         }).catch(validate.ValidationError, function(e) {
             res.status(403).json({ error: 'The uploaded file is not an image.' });
         }).catch(models.sequelize.UniqueConstraintError, function(e) {
@@ -95,9 +118,9 @@ module.exports = function(router, models, io) {
 
 };
 
-// TODO: don't make this random, base it on the username
-function createFileName() {
-    return crypto.randomBytes(20).toString('hex');
+function md5(buffer) {
+    var hash = crypto.createHash('md5');
+    return hash.update(buffer).digest('hex');
 }
 
 function getImageUrl(imageId) {
