@@ -158,6 +158,14 @@ VOID MouseClick(POINT pt)
         if (PtInRect(&rctextChangeName, pt)) {
             GoToSetup();
         }
+        if (PtInRect(&rcSuccessList, pt)) {
+            SwitchToSuccessList();
+        }
+        if (PtInRect(&rcFailedList, pt)) {
+            SwitchToFailedList();
+        }
+        
+            
     }
 }
 

@@ -33,6 +33,32 @@ typedef struct myLISTVIEWITEM {
 LISTVIEWITEM ListViewBuffer[MAX_LISTSIZE];
 
 
+BOOL RefreshListView();
+
+//
+// Switching between the success and failure list
+//
+
+BOOL bSuccessList;
+RECT rcSuccessList;
+RECT rcFailedList;
+HBRUSH hbrSucess_Selected;
+HBRUSH hbrSucess_NotSelected;
+HBRUSH hbrFailed_Selected;
+HBRUSH hbrFailed_NotSelected;
+VOID SwitchToSuccessList() {
+    bSuccessList = TRUE;
+    RefreshListView();
+    InvalidateRect(hMainWnd, NULL, TRUE);
+}
+VOID SwitchToFailedList() {
+    bSuccessList = FALSE;
+    RefreshListView();
+    InvalidateRect(hMainWnd, NULL, TRUE);
+}
+
+
+
 BOOL bPaused;
 VOID TogglePause() {
     if (bLastConnectionSuccessfull) {
@@ -41,18 +67,13 @@ VOID TogglePause() {
         if (!bPaused) {
             OffThreadProcessDirectoryChange();
         }
-
     }
     InvalidateRect(hMainWnd, &rcConnectionLight, TRUE);
 }
 HBRUSH GetConnectionStateBrush() {
-    if (!bLastConnectionSuccessfull) {
-        return hbrConnectionRed;
-    }
-    if (bPaused) {
-        return hbrConnectionYellow;
-    }
-    return hbrConnectionGreen;
+    //Red if not connected, yellow if paused, green if all is well
+    return (!bLastConnectionSuccessfull) ? hbrConnectionRed : 
+           (bPaused) ?  hbrConnectionYellow : hbrConnectionGreen;
 }
 
 
@@ -89,7 +110,10 @@ BOOL RefreshListView()
         return FALSE;
     }
 
-    //Loop over each item in the success list
+    std::vector<std::string> * list = bSuccessList ?
+        &SuccessList : &FailedList;
+
+    //Loop over each item in the list
     int index = 0; 
     LV_ITEM lvI;
     lvI.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
@@ -98,13 +122,11 @@ BOOL RefreshListView()
     lvI.iSubItem = 0;
     lvI.pszText = LPSTR_TEXTCALLBACK;
     lvI.cchTextMax = MAX_STR;
-    for (auto it = SuccessList.begin(); 
-        it != SuccessList.end(); ++it) {
-
+    for (std::string str : *list) {
         //Designate a ListViewItem buffer and copy the char* value from SuccessList
         LISTVIEWITEM* plvi = &ListViewBuffer[index];//start at 0
         plvi->bValid = TRUE;
-        mbstowcs(plvi->strName, SuccessList[index].c_str(), MAX_STR);
+        mbstowcs(plvi->strName, str.c_str(), MAX_STR);
         lvI.lParam = (LPARAM)plvi;
 
         //LV_ITEM index starts at 1
@@ -157,6 +179,8 @@ BOOL Init_ListView(HWND hWnd)
 
 
 
+
+
 BOOL Init_MainView(HWND hWnd)
 {
     SetRect(&rctextSettings, 340, 10, 400, 30);
@@ -178,8 +202,17 @@ BOOL Init_MainView(HWND hWnd)
 
     SetRect(&rctextChangeName, 200, 10, 310, 30);
 
+    SetRect(&rcSuccessList, 240, 70, 290, 90);
+    SetRect(&rcFailedList, 240, 100, 290, 120);
+    hbrSucess_Selected = CreateSolidBrush(RGB(64, 194, 64));
+    hbrSucess_NotSelected = CreateSolidBrush(RGB(159, 212, 159));
+    hbrFailed_Selected = CreateSolidBrush(RGB(227, 79, 45));
+    hbrFailed_NotSelected = CreateSolidBrush(RGB(222, 140, 122));
+
+    bSuccessList = TRUE;
 
     Init_ListView(hWnd);
+
 
     return TRUE;
 }
@@ -220,6 +253,20 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     SelectObject(hdc, hFontSmall);
     LPWSTR strChangeName = TEXT("Change Name/ Server");
     DrawText(hdc, strChangeName, wcslen(strChangeName), &rctextChangeName, DT_TOP | DT_LEFT);
+
+
+
+    //Success and Failed list buttons
+    WCHAR strSuccess[100];
+    WCHAR strFailed[100];
+    wsprintf((LPWSTR)&strSuccess, TEXT("Success"));
+    wsprintf((LPWSTR)&strFailed, TEXT("Failed"));
+    FillRect(hdc, &rcSuccessList, bSuccessList ? 
+        hbrSucess_Selected : hbrSucess_NotSelected);
+    FillRect(hdc, &rcFailedList, bSuccessList ? 
+        hbrFailed_NotSelected : hbrFailed_Selected);
+    DrawText(hdc, strSuccess, wcslen(strSuccess), &rcSuccessList, DT_VCENTER | DT_CENTER);
+    DrawText(hdc, strFailed, wcslen(strFailed), &rcFailedList, DT_VCENTER | DT_CENTER);
 
 
 }

@@ -144,6 +144,10 @@ extern HWND hWndListView;
 extern RECT rctextViewOnWeb;
 extern RECT rcConnectionLight;
 extern RECT rctextChangeName;
+extern RECT rcSuccessList;
+extern RECT rcFailedList;
+VOID SwitchToSuccessList();
+VOID SwitchToFailedList();
 
 // Settings View (settings.cpp)
 BOOL Init_Settings(HWND hWnd);
