@@ -132,45 +132,56 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 // Handle Window Messages
 //
 
-VOID MouseClick(POINT pt)
+BOOL MouseClick(POINT pt, BOOL bHitTest)
 {
+    BOOL ret = FALSE;
     if (LOGINVIEW) {
         if (PtInRect(&rcLoginEnterButtonFrame, pt)) {
-            Login_Commit();
+            if (!bHitTest) Login_Commit();
+            ret = TRUE;
         }
     } else if (SETTINGSVIEW) {
         if (PtInRect(&rctextBack, pt)) {
-            GoToMainView();
+            if (!bHitTest) GoToMainView();
+            ret = TRUE;
         }
     } else {
         if (PtInRect(&rcScreenshotsDirectoryLink, pt)) {
-            OpenScreenshotsDirectory();
+            if (!bHitTest) OpenScreenshotsDirectory();
+            ret = TRUE;
         }
         if (PtInRect(&rctextViewOnWeb, pt)) {
-            OpenWorldPageInBrowser();
+            if (!bHitTest) OpenWorldPageInBrowser();
+            ret = TRUE;
         }
         if (PtInRect(&rcConnectionLight, pt)) {
-            TogglePause();
+            if (!bHitTest) TogglePause();
+            ret = TRUE;
         }
         if (PtInRect(&rctextChangeName, pt)) {
-            GoToSetup();
+            if (!bHitTest) GoToSetup();
+            ret = TRUE;
         }
         if (PtInRect(&rcSuccessList, pt)) {
-            SwitchToSuccessList();
+            if (!bHitTest) SwitchToSuccessList();
+            ret = TRUE;
         }
         if (FailedList.size() >  0) {
             if (PtInRect(&rcFailedList, pt)) {
-                SwitchToFailedList();
+                if (!bHitTest) SwitchToFailedList();
+                ret = TRUE;
             }
             if (PtInRect(&rcRetryAll, pt)) {
-                RetryAllFailed();
+                if (!bHitTest) RetryAllFailed();
+                ret = TRUE;
             }
             if (PtInRect(&rcIgnoreAll, pt)) {
-                IgnoreAllFailed();
+                if (!bHitTest) IgnoreAllFailed();
+                ret = TRUE;
             }
-        }
-            
+        }            
     }
+    return ret;
 }
 
 VOID KeyPressed(HWND hWnd, WPARAM wParam)

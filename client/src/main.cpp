@@ -13,6 +13,7 @@ TCHAR szWindowClass[MAX_LOADSTRING];
 TCHAR szApplicationToolTip[MAX_LOADSTRING];
 
 HWND hMainWnd;
+RECT rcMainWnd;
 
 RECT rcTargetArea;
 
@@ -56,7 +57,7 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
     case WM_LBUTTONDOWN:
     {
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        MouseClick(pt);
+        MouseClick(pt, FALSE);//False to actually take action
 
         //Show();
         //SetFocus(hMainWnd);
@@ -84,6 +85,21 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
     {
 
         break;
+    }
+
+    case WM_MOVE:
+        GetWindowRect(hMainWnd, &rcMainWnd);
+        break;
+
+    case WM_NCHITTEST:
+    {
+        LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        ScreenToClient(hMainWnd, &pt);
+        if (hit == HTCLIENT && !MouseClick(pt, TRUE)) {
+            hit = HTCAPTION;
+        }
+        return hit;
     }
 
     case WM_DESTROY:

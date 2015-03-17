@@ -27,7 +27,7 @@ VOID TogglePause();
 //window.cpp
 BOOL InitializeMainWindow(HWND hWnd);
 VOID    DrawMainWindow(HWND hwnd, HDC hdc);
-VOID MouseClick(POINT pt);
+BOOL MouseClick(POINT pt, BOOL bHitTest);
 VOID KeyPressed(HWND hWnd, WPARAM wParam);
 VOID GoToSettings();
 VOID GoToSetup();
