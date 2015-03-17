@@ -40,12 +40,13 @@ VOID InitUploadLists()
 
 VOID DeleteAllUploadLists()
 {
-    DeleteFile(filpath_success);
     DeleteFile(filpath_ignore);
-    SuccessList.clear();
     IgnoreList.clear();
     PendingList.clear();
     FailedList.clear();
+
+    //DeleteFile(filpath_success);
+    //SuccessList.clear();
 }
 
 BOOL IsFilenameInIgnoreList(LPCWSTR filename)

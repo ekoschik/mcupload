@@ -43,10 +43,7 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
 {
     switch (message) {
     case WM_CREATE:
-        InitializeMainWindow(hWnd);
         break;
-
-    //TODO: catch when losing focus and hide window
 
     case WM_PAINT: 
     {
@@ -61,7 +58,8 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
         MouseClick(pt);
 
-        //ToggleShowHide();
+        //Show();
+        //SetFocus(hMainWnd);
 
         break;
     }
@@ -70,9 +68,11 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         KeyPressed(hWnd, wParam);
         break;
 
-    case WM_KILLFOCUS:
+    case WM_ACTIVATE:
     {
-        //Hide();
+        if (wParam == WA_INACTIVE) {
+            Hide();
+        }
         break;
     }
 
@@ -158,7 +158,9 @@ VOID CreateMainWindow(HWND hWndParent)
         rcwork.right - rcwork.left,
         rcwork.bottom - rcwork.top,
         hWndParent, NULL, hInst, NULL);
-    
+
+    InitializeMainWindow(hMainWnd);
+
     //Show Window
     Show();
 

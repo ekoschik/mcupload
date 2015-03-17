@@ -1,16 +1,19 @@
 
 #include "stdafx.h"
 #include "MCuploader.h"
+#include <Dwmapi.h>
 
 #define ID_LISTVIEW     1000
 
-RECT rctextSettings;
 RECT rctextUsername;
 RECT rctextWorld;
 RECT rcNumUploaded;
 
 RECT rctextViewOnWeb;
 HBRUSH hbrViewOnWeb;
+
+RECT rcScreenshotsDirectoryLink;
+HBRUSH hbrushScreenshotsLink;
 
 RECT rcListView;
 HBRUSH hbrListViewBackground;
@@ -48,6 +51,7 @@ HBRUSH hbrSucess_Selected;
 HBRUSH hbrSucess_NotSelected;
 HBRUSH hbrFailed_Selected;
 HBRUSH hbrFailed_NotSelected;
+
 VOID SwitchToSuccessList() {
     bSuccessList = TRUE;
     RefreshListView();
@@ -185,24 +189,27 @@ BOOL Init_ListView(HWND hWnd)
 
 BOOL Init_MainView(HWND hWnd)
 {
-    SetRect(&rctextSettings, 340, 10, 400, 30);
-    SetRect(&rctextUsername, 20, 20, 150, 50);
+    SetRect(&rctextChangeName, 280, 10, 400, 30);
+    SetRect(&rcConnectionLight, 260, 10, 275, 25);
+
+    SetRect(&rctextUsername, 20, 10, 150, 50);
     SetRect(&rctextWorld, 20, 50, 150, 80);
 
     SetRect(&rcListView, 10, 50, 230, 240);
 
-    SetRect(&rcNumUploaded, 250, 218, 390, 240);
+    SetRect(&rcNumUploaded, 240, 218, 390, 240);
 
-    SetRect(&rctextViewOnWeb, 250, 190, 390, 210);
+    SetRect(&rctextViewOnWeb, 240, 190, 390, 210);
     hbrViewOnWeb = CreateSolidBrush(RGB(209, 216, 89));
     hbrListViewBackground = CreateSolidBrush(RGB(255, 255, 255));
 
-    SetRect(&rcConnectionLight, 315, 10, 330, 25);
+    SetRect(&rcScreenshotsDirectoryLink, 240, 166, 390, 185);
+    hbrushScreenshotsLink = CreateSolidBrush(RGB(133, 37, 250));
+
     hbrConnectionRed = CreateSolidBrush(RGB(255, 48, 48));
     hbrConnectionYellow = CreateSolidBrush(RGB(247, 255, 18));
     hbrConnectionGreen = CreateSolidBrush(RGB(0, 212, 0));
 
-    SetRect(&rctextChangeName, 200, 10, 310, 30);
 
     SetRect(&rcSuccessList, 240, 70, 290, 90);
     SetRect(&rcFailedList, 240, 100, 290, 120);
@@ -213,9 +220,11 @@ BOOL Init_MainView(HWND hWnd)
     SetRect(&rcRetryAll, 240, 125, 300, 140);
     SetRect(&rcIgnoreAll, 240, 145, 300, 165);
 
+
     bSuccessList = TRUE;
 
     Init_ListView(hWnd);
+
 
 
     return TRUE;
@@ -227,11 +236,11 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     ShowWindow(hWndListView, SW_SHOW);
     UpdateWindow(hWndListView);
 
-    //settings in the top right to go back
+    //Change Name/ Server
     SelectObject(hdc, hFontSmall);
-    LPWSTR strSettings = TEXT("Settings");
-    DrawText(hdc, strSettings, wcslen(strSettings), &rctextSettings, DT_TOP | DT_LEFT);
-    
+    LPWSTR strChangeName = TEXT("Change Name / Server");
+    DrawText(hdc, strChangeName, wcslen(strChangeName), &rctextChangeName, DT_VCENTER | DT_CENTER);
+
     //header with Username and World
     SelectObject(hdc, hFontHeader);
     DrawText(hdc, UD.username.c_str(), UD.username.size(), &rctextUsername, DT_TOP | DT_LEFT);
@@ -240,7 +249,7 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     WCHAR strSizeCounter[100];
     wsprintf((LPWSTR)&strSizeCounter, TEXT("# Uploaded: %d [%d]"), GetNumSuccess(), GetNumFailed());
     SelectObject(hdc, hFontNormal);
-    DrawText(hdc, strSizeCounter, wcslen(strSizeCounter), &rcNumUploaded, DT_TOP | DT_LEFT);
+    DrawText(hdc, strSizeCounter, wcslen(strSizeCounter), &rcNumUploaded, DT_VCENTER | DT_CENTER);
     
 
     //View On Web Button
@@ -253,30 +262,37 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     SelectBrush(hdc, GetConnectionStateBrush());
     Ellipse(hdc, rcConnectionLight.left, rcConnectionLight.top, rcConnectionLight.right, rcConnectionLight.bottom);
 
-    //Change Name/ Server
-    SelectObject(hdc, hFontSmall);
-    LPWSTR strChangeName = TEXT("Change Name/ Server");
-    DrawText(hdc, strChangeName, wcslen(strChangeName), &rctextChangeName, DT_TOP | DT_LEFT);
+    //open screenshots directory button
+    SelectObject(hdc, hFontNormal);
+    LPWSTR strScreenshotsDir = TEXT("Screenshots Dir");
+    FillRect(hdc, &rcScreenshotsDirectoryLink, hbrushScreenshotsLink);
+    DrawText(hdc, strScreenshotsDir, wcslen(strScreenshotsDir), &rcScreenshotsDirectoryLink, DT_VCENTER | DT_CENTER);
 
 
 
     //Success (and Failed list buttons)
+    int nudge = 3;
+    RECT rcSuccessListNudge = rcSuccessList;
+    rcSuccessListNudge.top += nudge;
+    SelectObject(hdc, hFontSmall);
     WCHAR strSuccess[100];
     wsprintf((LPWSTR)&strSuccess, TEXT("Success"));
     FillRect(hdc, &rcSuccessList, bSuccessList ? 
         hbrSucess_Selected : hbrSucess_NotSelected);
-    DrawText(hdc, strSuccess, wcslen(strSuccess), &rcSuccessList, DT_VCENTER | DT_CENTER);
+    DrawText(hdc, strSuccess, wcslen(strSuccess), &rcSuccessListNudge, DT_VCENTER | DT_CENTER);
     
     if (FailedList.size() >  0) {
 
         LPRECT lprcSelected = bSuccessList ? &rcSuccessList : &rcFailedList;
         DrawEdge(hdc, lprcSelected, BDR_RAISEDINNER, BF_RECT);
 
+        RECT rcFailedListNudge = rcFailedList;
+        rcFailedListNudge.top += nudge;
         WCHAR strFailed[100];
         wsprintf((LPWSTR)&strFailed, TEXT("Failed"));
         FillRect(hdc, &rcFailedList, bSuccessList ?
         hbrFailed_NotSelected : hbrFailed_Selected);
-        DrawText(hdc, strFailed, wcslen(strFailed), &rcFailedList, DT_VCENTER | DT_CENTER);
+        DrawText(hdc, strFailed, wcslen(strFailed), &rcFailedListNudge, DT_VCENTER | DT_CENTER);
 
         SelectObject(hdc, hFontSmall);
         WCHAR strRetryAll[100];

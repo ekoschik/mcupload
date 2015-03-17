@@ -7,10 +7,8 @@ RECT rctextBack;
 RECT rctextSettingsHeader;
 //RECT rctextReset;
 //RECT rctextResetButton;
-RECT rcScreenshotsDirectoryLink;
 
 HBRUSH hbrushReset;
-HBRUSH hbrushScreenshotsLink;
 
 
 BOOL Init_Settings(HWND hWnd)
@@ -25,9 +23,6 @@ BOOL Init_Settings(HWND hWnd)
     //    rctextReset.bottom + 5);
 
     hbrushReset = CreateSolidBrush(RGB(224, 56, 56));
-
-    SetRect(&rcScreenshotsDirectoryLink, 300, 70, 390, 90);
-    hbrushScreenshotsLink = CreateSolidBrush(RGB(133, 37, 250));
 
     return TRUE;
 }
@@ -48,11 +43,6 @@ VOID Draw_Settings(HWND hWnd, HDC hdc)
     //DrawText(hdc, strReset, wcslen(strReset), &rctextReset, DT_TOP | DT_LEFT);
 
 
-    //open screenshots directory button
-    //SelectObject(hdc, hFontNormal);
-    //LPWSTR strScreenshotsDir = TEXT("Screenshots Dir");
-    //FillRect(hdc, &rcScreenshotsDirectoryLink, hbrushScreenshotsLink);
-    //DrawText(hdc, strScreenshotsDir, wcslen(strScreenshotsDir), &rcScreenshotsDirectoryLink, DT_TOP | DT_LEFT);
 
 
     //select screenshots directory

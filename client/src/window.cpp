@@ -143,9 +143,6 @@ VOID MouseClick(POINT pt)
             GoToMainView();
         }
     } else {
-        if (PtInRect(&rctextSettings, pt)) {
-            GoToSettings();
-        }
         if (PtInRect(&rcScreenshotsDirectoryLink, pt)) {
             OpenScreenshotsDirectory();
         }

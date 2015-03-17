@@ -142,7 +142,6 @@ extern RECT rcLoginEnterButtonFrame;
 // Main View (mainview.cpp)
 BOOL Init_MainView(HWND hWnd);
 VOID Draw_MainView(HWND hWnd, HDC hdc);
-extern RECT rctextSettings;
 extern RECT rcScreenshotsDirectoryLink;
 extern HWND hWndListView;
 extern RECT rctextViewOnWeb;
