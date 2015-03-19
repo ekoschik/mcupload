@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "browserify": "browserify components/Main.react.js | uglifyjs > public/js/app.min.js",
+    "build": "npm run browserify"
   },
   "dependencies": {
     "bluebird": "^2.9.13",
@@ -17,10 +19,22 @@
     "multer": "^0.1.8",
     "nbt": "^0.3.0",
     "node-uuid": "^1.4.3",
+    "node-jsx": "^0.12.4",
+    "react": "^0.13.1",
     "request": "^2.53.0",
     "sequelize": "^2.0.3",
     "sequelize-cli": "^1.3.1",
     "socket.io": "^1.3.5",
     "sqlite3": "^3.0.5"
+  },
+  "devDependencies": {
+    "browserify": "^9.0.3",
+    "reactify": "^1.1.0",
+    "uglify-js": "^2.4.17"
+  },
+  "browserify": {
+    "transform": [
+      "reactify"
+    ]
   }
 }

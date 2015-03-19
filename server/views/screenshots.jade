@@ -2,11 +2,7 @@ extends layout
 
 block content
     h1= title
-    div(class='image-list')
-        ul
-            each image in images
-                li
-                    div(class='image' style='background-image: url(/screenshots/' + image.url + ');')
+    !{markup}
 
     div(class="modal-overlay hidden")
     div(class="modal-content hidden")

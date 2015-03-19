@@ -35,10 +35,21 @@
    */
   "jsonSizeLimit": "2mb",
 
-
   /**
    * The root directory of the minecraft server. Leave null
    * if this is not running next to a minecraft server.
    */
-  "minecraftDir": null
+  "minecraftDir": null,
+
+  /**
+   * The url of a minecraft map of your world. Can be any mapping
+   * system that supports urls to specific locations.
+   */
+  "mapUrl": null,
+
+  /**
+   * The url format the mapping system expects. Defaults to the url
+   * format of the MinecraftOverview program.
+   */
+   "mapUrlFormat": "/#/{x}/{y}/{z}/{zoom}/{dimension}/0"
 }
