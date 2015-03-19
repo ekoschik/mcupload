@@ -7,6 +7,7 @@ var Promise    = require('bluebird')
   , config     = require('config')
   , mojang     = require('../lib/mojang')
   , NBTMonitor = require('../lib/nbtmonitor')
+  , UUID       = require('node-uuid')
   ;
 
 function removeExtension(path) {
@@ -22,6 +23,17 @@ function getPlayerFromFilename(fname) {
 // TODO: this needs to be set up to update new players when they are added,
 // otherwise trying to insert the locations will fail
 module.exports = function(models) {
+
+    if (config.has('debugUser')) {
+        var user = config.get('debugUser');
+        models.Player.create({
+            uuid: UUID.v4(),
+            name: user
+        }).catch(e) {
+            console.log('failed to create debug user: ' + e);
+        }
+    }
+
     // if the server hasn't been configured with a minecraft directory,
     // then don't bother to start watching for player updates
     var minecraftDir = config.get('minecraftDir');
