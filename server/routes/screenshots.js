@@ -7,6 +7,8 @@ var Promise   = require('bluebird')
   , crypto    = require('crypto')
   , validate  = require('../lib/validate')
   , uploadDir = require('config').get('uploadDir')
+  , React     = require('react')
+  , ScreenshotList    = require('../components/ScreenshotList.jsx')
   , UserNotFoundError = require('../lib/errorutils').createError('UserNotFoundError')
   ;
 
@@ -17,14 +19,16 @@ module.exports = function(router, models, io) {
     });
 
     router.get('/', function(req, res, next) {
-        models.Image.findAll({
+        var query = {
             order: 'createdAt DESC',
             attributes: ['url', 'name', 'player', 'createdAt']
-        }).then(function(images) {
+        };
+        models.Image.findAll(query).then(function(images) {
             // TODO: factor this type of functionality out into some kind
             // of middleware
             if (req.accepts('html')) {
-                res.render('screenshots.jade', { title: 'Screenshots', 'images': images });
+                var markup = getScreenshotListMarkup(images);
+                res.render('screenshots.jade', { title: 'Screenshots', markup: markup });
             } else if (req.accepts('json')) {
                 res.json({ screenshots: images });
             } else {
@@ -117,6 +121,14 @@ module.exports = function(router, models, io) {
     });
 
 };
+
+function getScreenshotListMarkup(screenshots) {
+    return React.renderComponentToString(
+        ScreenshotList({
+            screenshots: screenshots
+        })
+    );
+}
 
 function md5(buffer) {
     var hash = crypto.createHash('md5');

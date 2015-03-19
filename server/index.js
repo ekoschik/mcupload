@@ -11,6 +11,7 @@ var express    = require('express')
   , app        = express()
   , server     = http.createServer(app)
   , io         = require('socket.io')(server)
+  , JSX        = require('node-jsx').install({ extension: '.jsx' })
   ;
 
 
