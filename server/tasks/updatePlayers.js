@@ -29,9 +29,11 @@ module.exports = function(models) {
         models.Player.create({
             uuid: UUID.v4(),
             name: user
-        }).catch(e) {
+        }).then(function() {
+            console.log('created debug user "' + user + '"');
+        }).catch(function(e) {
             console.log('failed to create debug user: ' + e);
-        }
+        });
     }
 
     // if the server hasn't been configured with a minecraft directory,
