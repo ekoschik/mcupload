@@ -75,7 +75,6 @@ function loadTasks(taskDir) {
 }
 
 loadRoutes('routes');
-loadTasks('tasks');
 
 // development error handler
 // will print stacktrace
@@ -103,6 +102,7 @@ app.use(function(err, req, res, next) {
 
 // sync the database and then start the server
 models.sequelize.sync().then(function() {
+    loadTasks('tasks');
     var port = config.get('port');
     var address = config.get('ipAddress');
     server.listen(port, address, function() {
