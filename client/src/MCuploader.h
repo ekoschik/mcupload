@@ -13,6 +13,9 @@
 
 extern HINSTANCE hInst;
 extern HWND hMainWnd;
+extern RECT rcWindow;
+extern RECT rcMonitorBottomRight;
+VOID ResetLocation();
 
 __inline VOID Error(LPWSTR msg) {
     MessageBox(NULL, msg, _T("Error"), MB_OK);
@@ -21,7 +24,7 @@ __inline VOID Error(LPWSTR msg) {
 
 VOID SetLoginEditControlsFromUD();
 BOOL RefreshListView();
-LRESULT NotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT NotifyHandler(LPARAM lParam);
 VOID TogglePause();
 
 //window.cpp
@@ -91,7 +94,7 @@ VOID    OpenScreenshotsDirectory();
 std::string ToStr(LPCWSTR in);
 extern WCHAR    IniFilePath[MAX_PATH];
 extern WCHAR    ApplicationDirectoryPath[MAX_PATH];
-//extern WCHAR    ScreenshotDirPath[MAX_PATH];
+VOID CommitWindowPlacement();
 
 typedef struct myUserData {
     std::wstring username;
@@ -135,8 +138,6 @@ VOID Draw_Login(HWND hWnd, HDC hdc);
 VOID Login_Commit();
 VOID HideEditControls();
 extern RECT rcLoginEnterButtonFrame;
-//extern HWND hLoginUsernameEditControl;
-//extern HWND hLoginWorldEditControl;
 
 
 // Main View (mainview.cpp)
@@ -154,10 +155,5 @@ VOID SwitchToFailedList();
 extern RECT rcRetryAll;
 extern RECT rcIgnoreAll;
 extern BOOL bSuccessList;
-
-// Settings View (settings.cpp)
-BOOL Init_Settings(HWND hWnd);
-VOID Draw_Settings(HWND hWnd, HDC hdc);
-extern RECT rctextBack;
-extern RECT rctextResetButton;
+extern RECT rcSnap;
 

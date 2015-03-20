@@ -1,16 +1,21 @@
 
 #include "stdafx.h"
 #include "MCuploader.h"
-#define IDD_EMAIL    100101
 
 
 int window_width = 400;
 int window_height = 250;
 
-HWND hwndMain;
 RECT rcWindow;
+
+HWND hwndMain;
 BOOL bSettingsView = FALSE;
 BOOL bSetupView = FALSE;
+
+HBRUSH hbackground;
+HFONT hFontHeader;
+HFONT hFontNormal;
+HFONT hFontSmall;
 
 VOID HideEverything() {
     HideEditControls();
@@ -36,11 +41,6 @@ VOID GoToMainView() {
     bSetupView = FALSE;
     InvalidateRect(hMainWnd, NULL, TRUE);
 }
-
-HBRUSH hbackground;
-HFONT hFontHeader;
-HFONT hFontNormal;
-HFONT hFontSmall;
 
 VOID OpenWorldPageInBrowser()
 {
@@ -90,7 +90,6 @@ BOOL InitializeMainWindow(HWND hWnd)
 
     Init_Shared();
     Init_Login(hWnd);
-    Init_Settings(hWnd);
     Init_MainView(hWnd);
 
     return TRUE;
@@ -116,16 +115,14 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 
     if (LOGINVIEW) {
         Draw_Login(hWnd, hdc);
-    }
-    else if (SETTINGSVIEW) {
-        Draw_Settings(hWnd, hdc);
-    }
-    else {
+    } else {
         Draw_MainView(hWnd, hdc);
     }
 
 
 }
+
+
 
 
 //
@@ -138,11 +135,6 @@ BOOL MouseClick(POINT pt, BOOL bHitTest)
     if (LOGINVIEW) {
         if (PtInRect(&rcLoginEnterButtonFrame, pt)) {
             if (!bHitTest) Login_Commit();
-            ret = TRUE;
-        }
-    } else if (SETTINGSVIEW) {
-        if (PtInRect(&rctextBack, pt)) {
-            if (!bHitTest) GoToMainView();
             ret = TRUE;
         }
     } else {
@@ -179,11 +171,14 @@ BOOL MouseClick(POINT pt, BOOL bHitTest)
                 if (!bHitTest) IgnoreAllFailed();
                 ret = TRUE;
             }
-        }            
+        }
+        if (PtInRect(&rcSnap, pt)) {
+            if (!bHitTest) ResetLocation();
+            ret = TRUE;
+        }
     }
     return ret;
 }
-
 VOID KeyPressed(HWND hWnd, WPARAM wParam)
 {
     if (wParam == VK_ESCAPE) {

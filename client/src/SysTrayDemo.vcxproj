@@ -90,7 +90,6 @@
     <ClCompile Include="dataini.cpp" />
     <ClCompile Include="login.cpp" />
     <ClCompile Include="mainview.cpp" />
-    <ClCompile Include="settings.cpp" />
     <ClCompile Include="uploadlists.cpp" />
     <ClCompile Include="window.cpp" />
     <ClCompile Include="stdafx.cpp">

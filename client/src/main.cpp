@@ -13,9 +13,7 @@ TCHAR szWindowClass[MAX_LOADSTRING];
 TCHAR szApplicationToolTip[MAX_LOADSTRING];
 
 HWND hMainWnd;
-RECT rcMainWnd;
 
-RECT rcTargetArea;
 
 
 BOOL bHidden = FALSE;
@@ -43,9 +41,10 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
                                  LPARAM lParam)
 {
     switch (message) {
-    case WM_CREATE:
-        break;
 
+    //
+    // Drawing
+    //
     case WM_PAINT: 
     {
         PAINTSTRUCT ps;
@@ -54,14 +53,13 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         break;
     }
     
+    //
+    // Mouse and Keyboard Messages
+    //
     case WM_LBUTTONDOWN:
     {
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
         MouseClick(pt, FALSE);//False to actually take action
-
-        //Show();
-        //SetFocus(hMainWnd);
-
         break;
     }
 
@@ -69,28 +67,41 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         KeyPressed(hWnd, wParam);
         break;
 
+    case WM_MOUSEMOVE:
+        break;
+
+
+    //
+    // Hiding when losing focus
+    //
     case WM_ACTIVATE:
-    {
         if (wParam == WA_INACTIVE) {
             Hide();
         }
         break;
-    }
 
+    //
+    // Notify messages are for the ListView (mainview.cpp)
+    //
     case WM_NOTIFY:
-        return(NotifyHandler(hWnd, message, wParam, lParam));
+        NotifyHandler(lParam);
         break;
     
-    case WM_MOUSEMOVE:
-    {
 
+    //
+    // Saving window placement
+    //
+    case WM_EXITSIZEMOVE:
+        CommitWindowPlacement();
         break;
-    }
 
     case WM_MOVE:
-        GetWindowRect(hMainWnd, &rcMainWnd);
+        GetWindowRect(hMainWnd, &rcWindow);
         break;
 
+    //
+    // Moving the window by clicking and dragging the window
+    //
     case WM_NCHITTEST:
     {
         LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);
@@ -110,13 +121,17 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-RECT GetClickPointMonitorRect()
+//Get the work rect of the monitor the last click was on
+RECT rcMonitorBottomRight;
+RECT GetBottomRightMonitorRect()
 {
+    //Get the monitor based on last click
     POINT ClickPoint;
     GetCursorPos(&ClickPoint);
     HMONITOR hmon = MonitorFromPoint(
         ClickPoint, MONITOR_DEFAULTTONEAREST);
     
+    //Get Monitor Info
     MONITORINFOEX moninfo;
     moninfo.cbSize = sizeof(MONITORINFOEX);
     if (GetMonitorInfo(hmon, &moninfo) == 0) {
@@ -124,8 +139,22 @@ RECT GetClickPointMonitorRect()
             _T("GetMonitorInfo failed."), _T("Error"), MB_OK);
         return { 0, 0, 0, 0 };
     }
+
+    //Subtract window size to get rcMonitorBottomRight
+    RECT rcMonitorWork = moninfo.rcWork;
+    rcMonitorBottomRight = rcMonitorWork;
+    rcMonitorBottomRight.left = rcMonitorBottomRight.right - window_width;
+    rcMonitorBottomRight.top = rcMonitorBottomRight.bottom - window_height;
     
-    return moninfo.rcWork;
+    return rcMonitorBottomRight;
+}
+
+VOID ResetLocation()
+{
+    SetWindowPos(hMainWnd, NULL, rcMonitorBottomRight.left, rcMonitorBottomRight.top,
+        rcMonitorBottomRight.right - rcMonitorBottomRight.left,
+        rcMonitorBottomRight.bottom - rcMonitorBottomRight.top, SWP_SHOWWINDOW);
+    InvalidateRect(hMainWnd, NULL, TRUE);
 }
 
 VOID CreateMainWindow(HWND hWndParent)
@@ -135,7 +164,7 @@ VOID CreateMainWindow(HWND hWndParent)
     WNDCLASSEX wcex;
     ZeroMemory(&wcex, sizeof(WNDCLASSEX));
     wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = NULL;
+    wcex.style = CS_DBLCLKS;
     wcex.lpfnWndProc = MainMenuWndProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
@@ -149,30 +178,16 @@ VOID CreateMainWindow(HWND hWndParent)
     RegisterClassEx(&wcex);
 
     //Setup Window Work Area
-    RECT rcMon = GetClickPointMonitorRect();
-    RECT rcwork;
-    CopyRect(&rcwork, &rcMon);
-    rcwork.top = rcwork.bottom - window_height;
-    rcwork.left = rcwork.right - window_width;
-    rcwork.top -= 5;
-    rcwork.left -= 5;
-    rcwork.right -= 5;
-    rcwork.bottom -= 5;
-
-    //for knowing if the cursor is in the bottom right corner
-    CopyRect(&rcTargetArea, &rcwork);
-    rcTargetArea.bottom = rcMon.bottom;
-    rcTargetArea.right = rcMon.right;
-
-
+    rcWindow = GetBottomRightMonitorRect();
+    
     //Create Window
     hMainWnd = CreateWindow(
         wndclass, NULL,
-        WS_POPUP,
-        rcwork.left,
-        rcwork.top,
-        rcwork.right - rcwork.left,
-        rcwork.bottom - rcwork.top,
+        WS_POPUP/* | WS_SIZEBOX*/,
+        rcWindow.left,
+        rcWindow.top,
+        rcWindow.right - rcWindow.left,
+        rcWindow.bottom - rcWindow.top,
         hWndParent, NULL, hInst, NULL);
 
     InitializeMainWindow(hMainWnd);
@@ -203,19 +218,8 @@ VOID ActivatePopupMenu(HWND hWnd)
         lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
 }
 
-//Handle Popup Menu Related Window Messages
-VOID MenuWndProc(HWND hWnd,
-                             UINT message,
-                             WPARAM wParam,
-                             LPARAM lParam)
-{
-    switch (LOWORD(wParam)) {
-    case IDM_EXIT:
-        Shell_NotifyIcon(NIM_DELETE, &nidApp);
-        DestroyWindow(hWnd);
-        break;
-    }
-}
+
+
 
 LRESULT CALLBACK WndProc(HWND hWnd, 
                          UINT message, 
@@ -227,32 +231,36 @@ LRESULT CALLBACK WndProc(HWND hWnd,
         CreateMainWindow(hWnd);
         break;
 
+    //
+    // Clicking on the shell tray icon
+    //
 	case WM_USER_SHELLICON: 
         switch (LOWORD(lParam))  {
         case WM_LBUTTONDOWN:
-        {
-
-            ToggleShowHide();
-            if (!bHidden) {
-                SetFocus(hMainWnd);
-            }
-        }
+            Show();
+            SetForegroundWindow(hMainWnd);
         break;
 
-        //right click shows the popup menu
         case WM_RBUTTONDOWN:
             ActivatePopupMenu(hWnd);
 			return TRUE;
 		}
-		break;
+        break;
 
+    //
+    //Handle Popup Menu Related Window Messages
+    //
 	case WM_COMMAND:
-        MenuWndProc(hWnd, message, wParam, lParam);
+        switch (LOWORD(wParam)) {
+        case IDM_EXIT:
+            Shell_NotifyIcon(NIM_DELETE, &nidApp);
+            DestroyWindow(hWnd);
+            break;
+        }
         break;
 
     case WM_DESTROY:
-        StopWatchingDirectory();
-        
+        StopWatchingDirectory();        
 		PostQuitMessage(0);
 		break;
 	}
@@ -266,7 +274,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     WNDCLASSEX wcex;
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wcex.lpfnWndProc = WndProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;

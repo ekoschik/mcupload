@@ -25,6 +25,21 @@ unsigned short ReadPort() {
 }
 
 
+
+BOOL HandleServerResponse(string response, LPCWSTR filepath, LPCWSTR filename)
+{
+    return (response[9] == '2');
+
+    //Jank City (...read response code)
+    //char* retStatus = buffer + 9;
+    //BOOL success = (retStatus[0] == '2');
+    //
+    //return success;
+
+    //return TRUE;
+}
+
+
 string getBody(string username, string filename, string filedata) {
     string body;
     body.append("{\"user\":\"");
@@ -117,17 +132,26 @@ BOOL UploadFile(LPCWSTR filepath, LPCWSTR filename, SOCKET Socket)
 
 
     //Read response
-    char buffer[10000] = { };
+    const int returnbufsize = 100;
+    char buffer[returnbufsize] = {};
     int nDataLength;
     string ret;
-    nDataLength = recv(Socket, buffer, 10000, 0);
-    ret = buffer;
+    do {
+        ZeroMemory(&buffer, returnbufsize);
+        nDataLength = recv(Socket, buffer, returnbufsize, 0);
+        ret += buffer;
 
-    //Jank City (...read response code)
-    char* retStatus = buffer + 9;
-    BOOL success = (retStatus[0] == '2');
+        if (nDataLength == SOCKET_ERROR) {
+            Error(_T("recv returned SOCKET_ERROR"));
+        }
 
-    return success;
+    } while (nDataLength == returnbufsize);
+        //TODO why does recv fail if called one more time???
+
+
+    //Handle response and return
+    return HandleServerResponse(ret, filepath, filename);
+
 }
 
 VOID CloseConnection(SOCKET Socket)

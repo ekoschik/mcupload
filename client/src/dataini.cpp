@@ -102,33 +102,13 @@ BOOL ReadContentsFromFile()
 
     return bFile;
 }
-//
-//
-//BOOL SetKey(LPCWSTR key, LPCWSTR val)
-//{
-//    return WritePrivateProfileString(
-//        TEXT("MCuploader"), key, val, IniFilePath);
-//}
-//
-//BOOL GetKey(LPCWSTR key, LPWSTR out)
-//{
-//    ZeroMemory(out, MAX_PATH);
-//
-//    int ret = GetPrivateProfileString(
-//        TEXT("MCuploader"), key,
-//        TEXT(""), //default value 
-//        out, MAX_PATH,
-//        IniFilePath);
-//
-//    return ret > 0;
-//}
-//
-//VOID ResetDataIni()
-//{
-//
-//
-//
-//}
+
+
+VOID CommitWindowPlacement()
+{
+    //TODO read and write rcWindow to dataini
+}
+
 
 BOOL InitDataFile()
 {

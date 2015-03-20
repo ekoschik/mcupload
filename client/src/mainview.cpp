@@ -52,6 +52,9 @@ HBRUSH hbrSucess_NotSelected;
 HBRUSH hbrFailed_Selected;
 HBRUSH hbrFailed_NotSelected;
 
+RECT rcSnap;
+HBRUSH hbrSnap;
+
 VOID SwitchToSuccessList() {
     bSuccessList = TRUE;
     RefreshListView();
@@ -76,6 +79,7 @@ VOID TogglePause() {
     }
     InvalidateRect(hMainWnd, &rcConnectionLight, TRUE);
 }
+
 HBRUSH GetConnectionStateBrush() {
     //Red if not connected, yellow if paused, green if all is well
     return (!bLastConnectionSuccessfull) ? hbrConnectionRed : 
@@ -84,24 +88,21 @@ HBRUSH GetConnectionStateBrush() {
 
 
 
-LRESULT NotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT NotifyHandler(LPARAM lParam)
 {
-    //Cast Params
     LV_DISPINFO *pLvdi = (LV_DISPINFO *)lParam;
     NM_LISTVIEW *pNm = (NM_LISTVIEW *)lParam;
     LISTVIEWITEM* pListViewItem = (LISTVIEWITEM*)(pLvdi->item.lParam);
 
-    if (wParam != ID_LISTVIEW)
-        return 0L;
-
-    switch (pLvdi->hdr.code)
-    {
+    switch (pLvdi->hdr.code) {
+    
     //List views can ask for an items display name
     case LVN_GETDISPINFO: 
         pLvdi->item.pszText = pListViewItem->strName;
         break;
         
     }
+    return 0;
 }
 
 BOOL RefreshListView()
@@ -111,7 +112,7 @@ BOOL RefreshListView()
         ListViewBuffer[i].bValid = FALSE;
     }
 
-    //Send a clear message to the list view
+    //Delete all items in the list view
     if (!ListView_DeleteAllItems(hWndListView)) {
         return FALSE;
     }
@@ -129,6 +130,7 @@ BOOL RefreshListView()
     lvI.pszText = LPSTR_TEXTCALLBACK;
     lvI.cchTextMax = MAX_STR;
     for (std::string str : *list) {
+
         //Designate a ListViewItem buffer and copy the char* value from SuccessList
         LISTVIEWITEM* plvi = &ListViewBuffer[index];//start at 0
         plvi->bValid = TRUE;
@@ -140,10 +142,7 @@ BOOL RefreshListView()
 
         if (ListView_InsertItem(hWndListView, &lvI) == -1)
             return FALSE;
-
     }
-
-    
 
     return TRUE;
 }
@@ -197,7 +196,7 @@ BOOL Init_MainView(HWND hWnd)
 
     SetRect(&rcListView, 10, 50, 230, 240);
 
-    SetRect(&rcNumUploaded, 240, 218, 390, 240);
+    SetRect(&rcNumUploaded, 220, 218, 390, 240);
 
     SetRect(&rctextViewOnWeb, 240, 190, 390, 210);
     hbrViewOnWeb = CreateSolidBrush(RGB(209, 216, 89));
@@ -220,6 +219,8 @@ BOOL Init_MainView(HWND hWnd)
     SetRect(&rcRetryAll, 240, 125, 300, 140);
     SetRect(&rcIgnoreAll, 240, 145, 300, 165);
 
+    SetRect(&rcSnap, window_width - 15, window_height - 30, window_width, window_height);
+    hbrSnap = CreateSolidBrush(RGB(245, 153, 60));
 
     bSuccessList = TRUE;
 
@@ -271,6 +272,18 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
 
 
     //Success (and Failed list buttons)
+
+    //LPRECT lprcSelected = bSuccessList ? &rcSuccessList : &rcFailedList;
+    //DrawEdge(hdc, lprcSelected, BDR_RAISEDINNER, BF_RECT);
+    RECT rcEdge = bSuccessList ? rcSuccessList : rcFailedList;
+    int edge = 1;
+    rcEdge.top -= edge;
+    rcEdge.bottom += edge;
+    rcEdge.left -= edge;
+    rcEdge.right += edge;
+    static HBRUSH hbrtmp = CreateSolidBrush(RGB(0, 0, 0));
+    FillRect(hdc, &rcEdge, hbrtmp);
+
     int nudge = 3;
     RECT rcSuccessListNudge = rcSuccessList;
     rcSuccessListNudge.top += nudge;
@@ -280,11 +293,10 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
     FillRect(hdc, &rcSuccessList, bSuccessList ? 
         hbrSucess_Selected : hbrSucess_NotSelected);
     DrawText(hdc, strSuccess, wcslen(strSuccess), &rcSuccessListNudge, DT_VCENTER | DT_CENTER);
+
+
     
     if (FailedList.size() >  0) {
-
-        LPRECT lprcSelected = bSuccessList ? &rcSuccessList : &rcFailedList;
-        DrawEdge(hdc, lprcSelected, BDR_RAISEDINNER, BF_RECT);
 
         RECT rcFailedListNudge = rcFailedList;
         rcFailedListNudge.top += nudge;
@@ -294,14 +306,20 @@ VOID Draw_MainView(HWND hWnd, HDC hdc)
         hbrFailed_NotSelected : hbrFailed_Selected);
         DrawText(hdc, strFailed, wcslen(strFailed), &rcFailedListNudge, DT_VCENTER | DT_CENTER);
 
-        SelectObject(hdc, hFontSmall);
-        WCHAR strRetryAll[100];
-        WCHAR strIgnoreAll[100];
-        wsprintf((LPWSTR)&strRetryAll, TEXT("Retry All"));
-        wsprintf((LPWSTR)&strIgnoreAll, TEXT("Ignore All"));
-        DrawText(hdc, strRetryAll, wcslen(strRetryAll), &rcRetryAll, DT_VCENTER | DT_CENTER);
-        DrawText(hdc, strIgnoreAll, wcslen(strIgnoreAll), &rcIgnoreAll, DT_VCENTER | DT_CENTER);
+
+        if (!bSuccessList) {
+            SelectObject(hdc, hFontSmall);
+            WCHAR strRetryAll[100];
+            WCHAR strIgnoreAll[100];
+            wsprintf((LPWSTR)&strRetryAll, TEXT("Retry All"));
+            wsprintf((LPWSTR)&strIgnoreAll, TEXT("Ignore All"));
+            DrawText(hdc, strRetryAll, wcslen(strRetryAll), &rcRetryAll, DT_VCENTER | DT_CENTER);
+            DrawText(hdc, strIgnoreAll, wcslen(strIgnoreAll), &rcIgnoreAll, DT_VCENTER | DT_CENTER);
+        }
     }
+
+
+    FillRect(hdc, &rcSnap, hbrSnap);
 
 }
 

@@ -219,9 +219,10 @@ DWORD WINAPI WatchDirectory(_In_ LPVOID lpParameter)
 
 VOID OpenScreenshotsDirectory()
 {
+    const WCHAR* directory = UD.screenshotdirectory.c_str();
     ShellExecute(NULL,
         TEXT("open"),
-        (LPWSTR)&ScreenshotDirPath,
+        directory,
         NULL,
         NULL,
         SW_SHOWDEFAULT);
