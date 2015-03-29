@@ -10,8 +10,8 @@ var express    = require('express')
   , models     = require('./models')
   , app        = express()
   , server     = http.createServer(app)
-  , io         = require('socket.io')(server)
-  , JSX        = require('node-jsx').install({ extension: '.jsx' })
+  , io         = require('socket.io')(server, { serveClient: false })
+  , reactViews = require('./lib/react-views')
   ;
 
 
@@ -21,7 +21,8 @@ if (app.get('env') === 'development') {
 }
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'jsx');
+app.engine('jsx', reactViews);
 
 app.use(function(req, res, next) {
     console.log(req.headers);
@@ -83,7 +84,7 @@ if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
     console.log(err);
     res.status(err.status || 500);
-    res.render('error', {
+    res.render('Error', {
       message: err.message,
       error: err
     });
@@ -95,7 +96,7 @@ if (app.get('env') === 'development') {
 app.use(function(err, req, res, next) {
   console.log(err);
   res.status(err.status || 500);
-  res.render('error', {
+  res.render('Error', {
     message: err.message,
     error: {}
   });
