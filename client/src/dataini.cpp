@@ -143,7 +143,9 @@ BOOL InitDataFile()
     PathAppend(IniFilePath, TEXT("\\data.ini"));
     InitDefaultValues();
     if (!ReadContentsFromFile()) {
-        GoToSetup();
+        GotoView(Login);
+    } else {
+        GotoView(Home);
     }
 
     return TRUE;

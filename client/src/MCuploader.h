@@ -11,21 +11,72 @@
 #include <vector>
 #include <string>
 
+__inline VOID Error(LPWSTR msg) {
+    MessageBox(NULL, msg, _T("Error"), MB_OK);
+}
+
+//mainview.cpp
+VOID InitMainView();
+BOOL MainViewMouseHandler(POINT pt, BOOL bClick);
+VOID DrawMainView(HWND hWnd, HDC hdc);
+BOOL InHeaderArea(POINT pt);
+BOOL IsPaused();
+BOOL InMainDrawingArea(POINT pt);
+
+//listview.cpp
+BOOL InitListView(HWND hMain, RECT rc);
+BOOL RefreshListView();
+LRESULT HandleListViewMessages(LPARAM lParam);
+int GetListViewSize();
+
+
+//buttons.cpp
+VOID InitButtons();
+VOID DrawMainButtons(HWND hWnd, HDC hdc);
+BOOL ButtonMouseHandler(POINT pt, BOOL bClick);
+enum SelectedView {
+    Login, Home, Uploads, Failed, Activity
+};
+
+VOID ScrollButtons(int delta);
+
+extern SelectedView gSelectedView;
+extern RECT rcMainArea;
+BOOL IsInLoginView();
+VOID GotoView(SelectedView sel);
+
+
+
+
+
+//                              //
+//                              //
+// =============================//
+//                              //
+//                              //
+// =============================//
+//                              //
+//                              //
+// =============================//
+//                              //
+//                              //
+
+
+
+
+//main.cpp
 extern HINSTANCE hInst;
 extern HWND hMainWnd;
 extern RECT rcWindow;
 extern RECT rcMonitorBottomRight;
 VOID ResetLocation();
-
-__inline VOID Error(LPWSTR msg) {
-    MessageBox(NULL, msg, _T("Error"), MB_OK);
-}
-
-
-VOID SetLoginEditControlsFromUD();
+//VOID SetLoginEditControlsFromUD();
 BOOL RefreshListView();
 LRESULT NotifyHandler(LPARAM lParam);
 VOID TogglePause();
+VOID Hide();
+VOID Show();
+
 
 //window.cpp
 BOOL InitializeMainWindow(HWND hWnd);
@@ -39,12 +90,12 @@ extern WCHAR IniFilePath[MAX_PATH];
 extern WCHAR ApplicationDirectoryPath[MAX_PATH];
 extern int window_width;
 extern int window_height;
-extern HFONT hFontHeader;
-extern HFONT hFontNormal;
-extern HFONT hFontSmall;
+//extern HFONT hFontHeader;
+//extern HFONT hFontNormal;
+//extern HFONT hFontSmall;
 extern BOOL bSettingsView;
 extern BOOL bSetupView;
-extern BOOL bPaused;
+//extern BOOL bPaused;
 #define LOGINVIEW       (bSetupView)
 #define SETTINGSVIEW    (!bSetupView && bSettingsView)
 #define NORMALVIEW      (!LOGINVIEW && !SETTINGSVIEW)
@@ -130,30 +181,3 @@ __inline std::string ToStr(LPCWSTR in)
     std::string out = buf;
     return out;
 }
-
-
-// Login View (login.cpp)
-BOOL Init_Login(HWND hWnd);
-VOID Draw_Login(HWND hWnd, HDC hdc);
-VOID Login_Commit();
-VOID HideEditControls();
-extern RECT rcLoginEnterButtonFrame;
-
-
-// Main View (mainview.cpp)
-BOOL Init_MainView(HWND hWnd);
-VOID Draw_MainView(HWND hWnd, HDC hdc);
-extern RECT rcScreenshotsDirectoryLink;
-extern HWND hWndListView;
-extern RECT rctextViewOnWeb;
-extern RECT rcConnectionLight;
-extern RECT rctextChangeName;
-extern RECT rcSuccessList;
-extern RECT rcFailedList;
-VOID SwitchToSuccessList();
-VOID SwitchToFailedList();
-extern RECT rcRetryAll;
-extern RECT rcIgnoreAll;
-extern BOOL bSuccessList;
-extern RECT rcSnap;
-

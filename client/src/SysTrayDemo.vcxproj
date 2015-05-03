@@ -87,8 +87,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="base64.cpp" />
+    <ClCompile Include="buttons.cpp" />
     <ClCompile Include="dataini.cpp" />
-    <ClCompile Include="login.cpp" />
+    <ClCompile Include="listview.cpp" />
     <ClCompile Include="mainview.cpp" />
     <ClCompile Include="uploadlists.cpp" />
     <ClCompile Include="window.cpp" />

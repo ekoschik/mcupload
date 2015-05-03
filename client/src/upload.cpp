@@ -29,14 +29,6 @@ unsigned short ReadPort() {
 BOOL HandleServerResponse(string response, LPCWSTR filepath, LPCWSTR filename)
 {
     return (response[9] == '2');
-
-    //Jank City (...read response code)
-    //char* retStatus = buffer + 9;
-    //BOOL success = (retStatus[0] == '2');
-    //
-    //return success;
-
-    //return TRUE;
 }
 
 

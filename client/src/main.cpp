@@ -14,27 +14,55 @@ TCHAR szApplicationToolTip[MAX_LOADSTRING];
 
 HWND hMainWnd;
 
-
-
 BOOL bHidden = FALSE;
-VOID Hide() {
+VOID Hide() 
+{
     if (bHidden) return;
     bHidden = TRUE;
     ShowWindow(hMainWnd, SW_HIDE);
 }
+
 VOID Show()
 {
     if (!bHidden) return;
     bHidden = FALSE;
     ShowWindow(hMainWnd, SW_SHOW);
 }
-VOID ToggleShowHide() 
+
+
+VOID ResetLocation()
 {
-    if (bHidden) Show(); else Hide();
+    //Get the monitor based on last click
+    POINT ClickPoint;
+    GetCursorPos(&ClickPoint);
+    HMONITOR hmon = MonitorFromPoint(
+        ClickPoint, MONITOR_DEFAULTTONEAREST);
+
+    //Get Monitor Info
+    MONITORINFOEX moninfo;
+    moninfo.cbSize = sizeof(MONITORINFOEX);
+    if (GetMonitorInfo(hmon, &moninfo) == 0) {
+        Error(_T("GetMonitorInfo failed."));
+        return;
+    }
+
+    //Subtract window size to get rcMonitorBottomRight
+    RECT rcMonitorWork = moninfo.rcWork;
+    RECT rcMonitorBottomRight = rcMonitorWork;
+    rcMonitorBottomRight.left = rcMonitorBottomRight.right - window_width;
+    rcMonitorBottomRight.top = rcMonitorBottomRight.bottom - window_height;
+
+    //SetWindowPos
+    SetWindowPos(hMainWnd, NULL,
+        rcMonitorBottomRight.left, rcMonitorBottomRight.top,
+        rcMonitorBottomRight.right - rcMonitorBottomRight.left,
+        rcMonitorBottomRight.bottom - rcMonitorBottomRight.top,
+        SWP_SHOWWINDOW);
+
+    InvalidateRect(hMainWnd, NULL, TRUE);
 }
 
 POINT lp;
-
 LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
                                  UINT message,
                                  WPARAM wParam,
@@ -48,7 +76,9 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
     case WM_PAINT: 
     {
         PAINTSTRUCT ps;
-        DrawMainWindow(hWnd, BeginPaint(hWnd, &ps));
+        HDC hdc = BeginPaint(hWnd, &ps);
+        SetBkMode(hdc, TRANSPARENT);
+        DrawMainWindow(hWnd, hdc);
         EndPaint(hWnd, &ps);
         break;
     }
@@ -59,7 +89,8 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
     case WM_LBUTTONDOWN:
     {
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        MouseClick(pt, FALSE);//False to actually take action
+        ButtonMouseHandler(pt, TRUE); //TRUE for bClick
+        MainViewMouseHandler(pt, TRUE);
         break;
     }
 
@@ -68,8 +99,22 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         break;
 
     case WM_MOUSEMOVE:
+    {
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        ButtonMouseHandler(pt, FALSE); //FALSE for bClick
+        MainViewMouseHandler(pt, TRUE);
         break;
+    }
 
+    case WM_MOUSEWHEEL:
+    {
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        ScreenToClient(hMainWnd, &pt); 
+        if (!InMainDrawingArea(pt)) {
+            ScrollButtons(GET_WHEEL_DELTA_WPARAM(wParam));
+        }
+        break;
+    }
 
     //
     // Hiding when losing focus
@@ -81,19 +126,12 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         break;
 
     //
-    // Notify messages are for the ListView (mainview.cpp)
+    // Notify messages are for the ListView
     //
     case WM_NOTIFY:
-        NotifyHandler(lParam);
+        HandleListViewMessages(lParam);
         break;
     
-
-    //
-    // Saving window placement
-    //
-    case WM_EXITSIZEMOVE:
-        CommitWindowPlacement();
-        break;
 
     case WM_MOVE:
         GetWindowRect(hMainWnd, &rcWindow);
@@ -107,7 +145,10 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
         LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
         ScreenToClient(hMainWnd, &pt);
-        if (hit == HTCLIENT && !MouseClick(pt, TRUE)) {
+        if (hit == HTCLIENT && 
+            !IsInLoginView() && 
+            InHeaderArea(pt)) {
+            
             hit = HTCAPTION;
         }
         return hit;
@@ -121,87 +162,11 @@ LRESULT CALLBACK MainMenuWndProc(HWND hWnd,
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-//Get the work rect of the monitor the last click was on
-RECT rcMonitorBottomRight;
-RECT GetBottomRightMonitorRect()
-{
-    //Get the monitor based on last click
-    POINT ClickPoint;
-    GetCursorPos(&ClickPoint);
-    HMONITOR hmon = MonitorFromPoint(
-        ClickPoint, MONITOR_DEFAULTTONEAREST);
-    
-    //Get Monitor Info
-    MONITORINFOEX moninfo;
-    moninfo.cbSize = sizeof(MONITORINFOEX);
-    if (GetMonitorInfo(hmon, &moninfo) == 0) {
-        MessageBox(NULL,
-            _T("GetMonitorInfo failed."), _T("Error"), MB_OK);
-        return { 0, 0, 0, 0 };
-    }
 
-    //Subtract window size to get rcMonitorBottomRight
-    RECT rcMonitorWork = moninfo.rcWork;
-    rcMonitorBottomRight = rcMonitorWork;
-    rcMonitorBottomRight.left = rcMonitorBottomRight.right - window_width;
-    rcMonitorBottomRight.top = rcMonitorBottomRight.bottom - window_height;
-    
-    return rcMonitorBottomRight;
-}
-
-VOID ResetLocation()
-{
-    SetWindowPos(hMainWnd, NULL, rcMonitorBottomRight.left, rcMonitorBottomRight.top,
-        rcMonitorBottomRight.right - rcMonitorBottomRight.left,
-        rcMonitorBottomRight.bottom - rcMonitorBottomRight.top, SWP_SHOWWINDOW);
-    InvalidateRect(hMainWnd, NULL, TRUE);
-}
-
-VOID CreateMainWindow(HWND hWndParent)
-{
-    //Register Window
-    LPCWSTR wndclass = TEXT("MainMenuWndClass");
-    WNDCLASSEX wcex;
-    ZeroMemory(&wcex, sizeof(WNDCLASSEX));
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = CS_DBLCLKS;
-    wcex.lpfnWndProc = MainMenuWndProc;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = 0;
-    wcex.hInstance = hInst;
-    wcex.hIcon = NULL;
-    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)GetStockObject(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = NULL;
-    wcex.lpszClassName = wndclass;
-    wcex.hIconSm = NULL;
-    RegisterClassEx(&wcex);
-
-    //Setup Window Work Area
-    rcWindow = GetBottomRightMonitorRect();
-    
-    //Create Window
-    hMainWnd = CreateWindow(
-        wndclass, NULL,
-        WS_POPUP/* | WS_SIZEBOX*/,
-        rcWindow.left,
-        rcWindow.top,
-        rcWindow.right - rcWindow.left,
-        rcWindow.bottom - rcWindow.top,
-        hWndParent, NULL, hInst, NULL);
-
-    InitializeMainWindow(hMainWnd);
-
-    //Show Window
-    Show();
-
-    SetActiveWindow(hMainWnd);
-    SetWindowPos(hMainWnd, HWND_TOPMOST, 0,0,0,0,
-        SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE);
-    
-}
-
-VOID ActivatePopupMenu(HWND hWnd)
+//
+// Right click popup menu
+//
+VOID ShowRightClickMenu(HWND hWnd)
 {
     hPopMenu = CreatePopupMenu();
 
@@ -219,17 +184,15 @@ VOID ActivatePopupMenu(HWND hWnd)
 }
 
 
-
-
+//
+// Tray window WndProc
+//
 LRESULT CALLBACK WndProc(HWND hWnd, 
                          UINT message, 
                          WPARAM wParam, 
                          LPARAM lParam) 
 {
 	switch (message) {
-    case WM_CREATE:
-        CreateMainWindow(hWnd);
-        break;
 
     //
     // Clicking on the shell tray icon
@@ -242,7 +205,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,
         break;
 
         case WM_RBUTTONDOWN:
-            ActivatePopupMenu(hWnd);
+            ShowRightClickMenu(hWnd);
 			return TRUE;
 		}
         break;
@@ -268,12 +231,18 @@ LRESULT CALLBACK WndProc(HWND hWnd,
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+//
+// Initialization
+//
+BOOL InitInstance(HINSTANCE hInstance)
 {
     hInst = hInstance;
+    LPWSTR WindowClass = _TEXT("WndClass");
+    LPWSTR WindowTitle = _TEXT("Title");
+
+    //Register Tray Window Class
     WNDCLASSEX wcex;
     wcex.cbSize = sizeof(WNDCLASSEX);
-
     wcex.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wcex.lpfnWndProc = WndProc;
     wcex.cbClsExtra = 0;
@@ -283,18 +252,29 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszMenuName = NULL;
-    wcex.lpszClassName = szWindowClass;
+    wcex.lpszClassName = WindowClass;
     wcex.hIconSm = NULL;
-
-    RegisterClassEx(&wcex);
-
-    HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-
-    if (!hWnd) {
+    if (RegisterClassEx(&wcex) == 0) {
         return FALSE;
     }
 
+    //Create Tray Window
+    HWND hWnd = CreateWindow(WindowClass, 
+        WindowTitle, 
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, 
+        CW_USEDEFAULT,
+        CW_USEDEFAULT, 
+        CW_USEDEFAULT,
+        NULL, 
+        NULL, 
+        hInstance, 
+        NULL);
+    if (hWnd == NULL) {
+        return FALSE;
+    }
+
+    //Register Shell Notify Icon
     ZeroMemory(&nidApp, sizeof(NOTIFYICONDATA));
     nidApp.cbSize = sizeof(NOTIFYICONDATA);
     nidApp.hWnd = hWnd;
@@ -303,14 +283,49 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     nidApp.hIcon = LoadIcon(hInstance, 
         (LPCTSTR)MAKEINTRESOURCE(IDI_MCUPLOADICON));
     nidApp.uCallbackMessage = WM_USER_SHELLICON;
-    
     LoadString(hInstance, IDS_APPTOOLTIP, nidApp.szTip, MAX_LOADSTRING);
-    
-    Shell_NotifyIcon(NIM_ADD, &nidApp);
+    if (!Shell_NotifyIcon(NIM_ADD, &nidApp)) {
+        return FALSE;
+    }
 
+    //Register Main Window
+    LPCWSTR wndclass = TEXT("MainWndClass");
+    ZeroMemory(&wcex, sizeof(WNDCLASSEX));
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.style = CS_DBLCLKS;
+    wcex.lpfnWndProc = MainMenuWndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInst;
+    wcex.hIcon = NULL;
+    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)GetStockObject(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = NULL;
+    wcex.lpszClassName = wndclass;
+    wcex.hIconSm = NULL;
+    if (RegisterClassEx(&wcex) == 0) {
+        return FALSE;
+    }
+
+    //Create Window
+    hMainWnd = CreateWindow(
+        wndclass, NULL,
+        WS_POPUP/* | WS_SIZEBOX*/,
+        0,0,0,0,
+        hWnd, NULL, hInst, NULL);
+
+
+    //Finish initialization in window.cpp
+    InitializeMainWindow(hMainWnd);
+
+    //Show Window
+    ResetLocation();
+    Show();
+
+    SetActiveWindow(hMainWnd);
+    
     return TRUE;
 }
-
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
@@ -319,31 +334,19 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
-
-    LoadString(hInstance,
-        IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadString(hInstance,
-        IDC_MCUPLOADICON, szWindowClass, MAX_LOADSTRING);
+    UNREFERENCED_PARAMETER(nCmdShow);
 
     InitCommonControls();
 
-    if (!InitInstance(hInstance, nCmdShow)) {
+    if (!InitInstance(hInstance)) {
         return FALSE;
     }
-
-    HACCEL hAccelTable = LoadAccelerators(hInstance,
-        MAKEINTRESOURCE(IDC_MCUPLOADICON));
-
-    hInst = hInstance;
 
     StartWatchingDirectory();
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        DispatchMessage(&msg);
     }
 
     return (int)msg.wParam;

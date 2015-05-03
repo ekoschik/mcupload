@@ -3,23 +3,30 @@
 #include "MCuploader.h"
 
 
-int window_width = 400;
-int window_height = 250;
-
+int window_width = 350;
+int window_height = 225;
 RECT rcWindow;
-
 HWND hwndMain;
+
+
+
+
+
+
+
+
+
+
+
+
+HBRUSH hbackground;
+
 BOOL bSettingsView = FALSE;
 BOOL bSetupView = FALSE;
 
-HBRUSH hbackground;
-HFONT hFontHeader;
-HFONT hFontNormal;
-HFONT hFontSmall;
-
 VOID HideEverything() {
-    HideEditControls();
-    ShowWindow(hWndListView, SW_HIDE);
+    //HideEditControls();
+    //ShowWindow(hWndListView, SW_HIDE);
 }
 
 VOID GoToSettings() {
@@ -32,7 +39,7 @@ VOID GoToSetup() {
     HideEverything();
     bSettingsView = FALSE;
     bSetupView = TRUE;
-    SetLoginEditControlsFromUD();
+    //SetLoginEditControlsFromUD();
     InvalidateRect(hMainWnd, NULL, TRUE);
 }
 VOID GoToMainView() {
@@ -61,37 +68,22 @@ VOID OpenWorldPageInBrowser()
 
 VOID Init_Shared()
 {
-    hbackground = CreateSolidBrush(RGB(199, 192, 237));
-
-    hFontHeader = CreateFont(25, 0, 0, 0,
-        FW_DONTCARE, FALSE, FALSE, FALSE,
-        0, 0, 0, 0, 0,
-        TEXT("Times New Roman"));
-
-    hFontNormal = CreateFont(20, 0, 0, 0,
-        FW_DONTCARE, FALSE, FALSE, FALSE,
-        0, 0, 0, 0, 0,
-        TEXT("Times New Roman"));
-
-    hFontSmall = CreateFont(15, 0, 0, 0,
-        FW_DONTCARE, FALSE, FALSE, FALSE,
-        0, 0, 0, 0, 0,
-        TEXT("Times New Roman"));
 
 }
 
 BOOL InitializeMainWindow(HWND hWnd)
 {
     hwndMain = hWnd;
+    hbackground = CreateSolidBrush(RGB(199, 192, 237));
 
     if (!InitDataFile()) {
         return FALSE;
     }
 
-    Init_Shared();
-    Init_Login(hWnd);
-    Init_MainView(hWnd);
-
+    //Keep this order b/c buttons sets main area rect
+    InitButtons();
+    InitMainView();
+    
     return TRUE;
 }
 
@@ -106,19 +98,9 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 {
     SetBkMode(hdc, TRANSPARENT);
 
-
-
-    //Draw background, save RECT to rcWindow
-    GetClientRect(hWnd, &rcWindow);
-    FillRect(hdc, &rcWindow, hbackground);
-
-
-    if (LOGINVIEW) {
-        Draw_Login(hWnd, hdc);
-    } else {
-        Draw_MainView(hWnd, hdc);
-    }
-
+    
+    DrawMainButtons(hWnd, hdc);
+    DrawMainView(hWnd, hdc);
 
 }
 
@@ -132,57 +114,58 @@ VOID DrawMainWindow(HWND hWnd, HDC hdc)
 BOOL MouseClick(POINT pt, BOOL bHitTest)
 {
     BOOL ret = FALSE;
-    if (LOGINVIEW) {
-        if (PtInRect(&rcLoginEnterButtonFrame, pt)) {
-            if (!bHitTest) Login_Commit();
-            ret = TRUE;
-        }
-    } else {
-        if (PtInRect(&rcScreenshotsDirectoryLink, pt)) {
-            if (!bHitTest) OpenScreenshotsDirectory();
-            ret = TRUE;
-        }
-        if (PtInRect(&rctextViewOnWeb, pt)) {
-            if (!bHitTest) OpenWorldPageInBrowser();
-            ret = TRUE;
-        }
-        if (PtInRect(&rcConnectionLight, pt)) {
-            if (!bHitTest) TogglePause();
-            ret = TRUE;
-        }
-        if (PtInRect(&rctextChangeName, pt)) {
-            if (!bHitTest) GoToSetup();
-            ret = TRUE;
-        }
-        if (PtInRect(&rcSuccessList, pt)) {
-            if (!bHitTest) SwitchToSuccessList();
-            ret = TRUE;
-        }
-        if (FailedList.size() >  0) {
-            if (PtInRect(&rcFailedList, pt)) {
-                if (!bHitTest) SwitchToFailedList();
-                ret = TRUE;
-            }
-            if (PtInRect(&rcRetryAll, pt)) {
-                if (!bHitTest) RetryAllFailed();
-                ret = TRUE;
-            }
-            if (PtInRect(&rcIgnoreAll, pt)) {
-                if (!bHitTest) IgnoreAllFailed();
-                ret = TRUE;
-            }
-        }
-        if (PtInRect(&rcSnap, pt)) {
-            if (!bHitTest) ResetLocation();
-            ret = TRUE;
-        }
-    }
+    //if (IsInLoginView()) {
+    //    if (PtInRect(&rcLoginEnterButtonFrame, pt)) {
+    //        if (!bHitTest) Login_Commit();
+    //        ret = TRUE;
+    //    }
+    //} else {
+    //    if (PtInRect(&rcScreenshotsDirectoryLink, pt)) {
+    //        if (!bHitTest) OpenScreenshotsDirectory();
+    //        ret = TRUE;
+    //    }
+    //    if (PtInRect(&rctextViewOnWeb, pt)) {
+    //        if (!bHitTest) OpenWorldPageInBrowser();
+    //        ret = TRUE;
+    //    }
+    //    if (PtInRect(&rcConnectionLight, pt)) {
+    //        if (!bHitTest) TogglePause();
+    //        ret = TRUE;
+    //    }
+    //    if (PtInRect(&rctextChangeName, pt)) {
+    //        if (!bHitTest) GoToSetup();
+    //        ret = TRUE;
+    //    }
+    //    if (PtInRect(&rcSuccessList, pt)) {
+    //        if (!bHitTest) SwitchToSuccessList();
+    //        ret = TRUE;
+    //    }
+    //    if (FailedList.size() >  0) {
+    //        if (PtInRect(&rcFailedList, pt)) {
+    //            if (!bHitTest) SwitchToFailedList();
+    //            ret = TRUE;
+    //        }
+    //        if (PtInRect(&rcRetryAll, pt)) {
+    //            if (!bHitTest) RetryAllFailed();
+    //            ret = TRUE;
+    //        }
+    //        if (PtInRect(&rcIgnoreAll, pt)) {
+    //            if (!bHitTest) IgnoreAllFailed();
+    //            ret = TRUE;
+    //        }
+    //    }
+    //    if (PtInRect(&rcSnap, pt)) {
+    //        if (!bHitTest) ResetLocation();
+    //        ret = TRUE;
+    //    }
+    //}
     return ret;
 }
+
 VOID KeyPressed(HWND hWnd, WPARAM wParam)
 {
     if (wParam == VK_ESCAPE) {
-        DestroyWindow(hWnd);
+        Hide();
     }
 
 }

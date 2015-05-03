@@ -26,7 +26,7 @@ VOID IgnoreAllFailed()
     }
     FailedList.clear();
     RefreshListView();
-    SwitchToSuccessList();
+    //SwitchToSuccessList();
     InvalidateRect(hMainWnd, NULL, TRUE);
 }
 
@@ -50,7 +50,7 @@ VOID FlushPending()
     SOCKET Socket = GetSocket();
     
     while (Socket != NULL && 
-           !bPaused &&
+           !IsPaused() &&
            PendingList.size() > 0) {
 
         //Get filename and filepath from Pending list
@@ -81,7 +81,7 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
     SOCKET Socket = GetSocket();
     bLastConnectionSuccessfull = (Socket != NULL);
    
-    if (!bLastConnectionSuccessfull || bPaused) {
+    if (!bLastConnectionSuccessfull || IsPaused()) {
         AddFileToPendingList(filename);
         return;
     }
@@ -103,7 +103,7 @@ VOID TestAndUploadFile(LPCWSTR filepath, LPCWSTR filename)
 
 VOID ProcessDirectoryChange()
 {
-    if (LOGINVIEW) {
+    if (IsInLoginView()) {
         return;
     }
 
