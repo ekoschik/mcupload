@@ -48,6 +48,21 @@
     <ClCompile Include="listview.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="zmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zmsgs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zpopupwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zdrawing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -57,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MCuploader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zheader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
