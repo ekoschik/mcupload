@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include <string>
+#include <list>
+#include <fstream>
+#include <Shlobj.h >
 
 __inline VOID Error(std::wstring msg) {
 	MessageBox(NULL, msg.c_str(), _T("Error"), MB_OK);
@@ -85,4 +88,20 @@ LRESULT CALLBACK TrayWndProc(
 
 VOID ShowPopupMenu(HWND hwndParent);
 VOID HandlePopupMessage(INT msg);
+
+
+//
+// Data Files
+//
+typedef struct t_Data {
+    std::wstring   servername;
+    unsigned long port;
+    std::wstring   worldname;
+    std::wstring   watchdirpath;
+} DATA;
+extern DATA UsrData;
+VOID InitializeDataFiles();
+VOID WriteUserDataToFile();
+BOOL IsFileNameInUploadLog(std::wstring filename);
+VOID AddFileNameToUploadLog(std::wstring filename);
 

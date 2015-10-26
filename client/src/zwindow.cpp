@@ -24,7 +24,7 @@ VOID Hide() {
 }
 
 VOID Repaint() {
-    InvalidateRect(hwnd,NULL, TRUE);
+    InvalidateRect(hwnd, NULL, TRUE);
 }
 
 
@@ -243,6 +243,8 @@ BOOL NCHitTest(POINT pt)
 BOOL InitializeMainWindow(HWND _hwnd)
 {
 	hwnd = _hwnd;
+
+    InitializeDataFiles();
 
     InitializeDrawingResources();
 

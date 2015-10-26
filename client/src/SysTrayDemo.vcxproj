@@ -101,6 +101,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="upload.cpp" />
     <ClCompile Include="watch.cpp" />
+    <ClCompile Include="zdatafile.cpp" />
     <ClCompile Include="zdrawing.cpp" />
     <ClCompile Include="zmain.cpp" />
     <ClCompile Include="zmsgs.cpp" />
