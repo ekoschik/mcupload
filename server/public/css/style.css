@@ -88,6 +88,10 @@ a {
     float: left;
 }
 
+.modal-image.full {
+    width: 98%;
+}
+
 .modal-map {
     float: left;
     width: 24%;

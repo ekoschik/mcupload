@@ -4,18 +4,19 @@
   "private": true,
   "scripts": {
     "start": "node index.js",
-    "browserify": "browserify views/Screenshots.jsx | uglifyjs > public/js/app.min.js",
-    "build": "npm run browserify"
+    "build": "browserify app.jsx > public/js/bundle.js"
   },
   "dependencies": {
     "bluebird": "^2.9.13",
     "body-parser": "^1.12.0",
+    "classnames": "^1.2.0",
     "config": "^1.12.0",
     "express": "^4.12.2",
-    "jade": "^1.9.2",
+    "express-handlebars": "^2.0.0",
     "jsondiffpatch": "^0.1.31",
     "lodash": "^3.5.0",
     "mmmagic": "^0.3.13",
+    "moment": "^2.9.0",
     "multer": "^0.1.8",
     "nbt": "^0.3.0",
     "node-jsx": "^0.12.4",

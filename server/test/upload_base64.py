@@ -6,7 +6,7 @@ import urllib2
 import base64
 
 
-URL = 'http://localhost:3000/upload'
+URL = 'http://localhost:3000/screenshots'
 
 
 def http_send_json(url, data):
@@ -28,10 +28,13 @@ def base64_encode_file(fname):
 
 def main():
     fname = sys.argv[1]
-    url = sys.argv[2] or URL
+    try:
+        url = sys.argv[2]
+    except IndexError:
+        url = URL
     buff = base64_encode_file(fname)
     data = {
-        'user': 'brian',
+        'user': 'schlenkster',
         'filedata': buff,
         'filename': fname,
     }

@@ -1,7 +1,7 @@
 'use strict';
 
-var React = require('react/addons')
-  , cx    = React.addons.classSet
+var React = require('react')
+  , cx    = require('classnames')
   ;
 
 module.exports = React.createClass({
@@ -24,16 +24,28 @@ module.exports = React.createClass({
 
         var image = this.props.image;
         var mapUrl = this.props.mapUrl;
-        var imageStyle = { backgroundImage: 'url(/screenshots/' + image + ')' };
+        var imageStyle = { backgroundImage: 'url(' + image + ')' };
+
+        var mapDiv = null;
+        var modalImageClasses = cx({
+            "modal-image": true,
+            "full": mapUrl == null
+        });
+
+        if (mapUrl) {
+            mapDiv = (
+                <div className="modal-map">
+                    <iframe src={mapUrl}></iframe>
+                </div>
+            );
+        }
 
         return (
-            <div className="modal-container">
+            <div className="modal-container" onClick={this.props.handleClick}>
                 <div className={overlayClasses}></div>
                 <div className={contentClasses}>
-                    <div className="modal-image" style={imageStyle}></div>
-                    <div className="modal-map">
-                        <iframe src={mapUrl}></iframe>
-                    </div>
+                    <div className={modalImageClasses} style={imageStyle}></div>
+                    {mapDiv}
                 </div>
             </div>
         );

@@ -13,7 +13,7 @@ module.exports = React.createClass({
             console.log(image);
             return (
                 <li key={image.hash}>
-                    <Image image={image} onClick={self.props.onImageClick} />
+                    <Image image={image} onImageClick={self.props.onImageClick} />
                 </li>
             );
         });

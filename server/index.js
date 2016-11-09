@@ -11,18 +11,21 @@ var express    = require('express')
   , app        = express()
   , server     = http.createServer(app)
   , io         = require('socket.io')(server, { serveClient: false })
-  , reactViews = require('./lib/react-views')
+  , exphbs     = require('express-handlebars')
+  , JSX        = require('node-jsx')
   ;
 
+JSX.install({ extension: '.jsx' });
 
 app.disable('x-powered-by');
 if (app.get('env') === 'development') {
     app.set('json spaces', 4);
 }
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jsx');
-app.engine('jsx', reactViews);
+app.engine('handlebars', exphbs({ defaultLayout: 'main' }));
+app.set('view engine', 'handlebars');
 
 app.use(function(req, res, next) {
     console.log(req.headers);
@@ -51,7 +54,7 @@ function loadRoutes(base) {
             } else {
                 // remove the extension, remove the base directory name
                 var routeName = routePath.substr(0, routePath.indexOf('.')).substr(base.length);
-				routeName = routeName.replace(/\\/g, '/')
+                routeName = routeName.replace(/\\/g, '/');
                 if (routeName === '/index') {
                     routeName = '/';
                 }

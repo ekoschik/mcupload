@@ -1,7 +1,6 @@
 'use strict';
 
 var React = require('react')
-  , Layout = require('./Layout.jsx')
   , ImageList = require('./components/ImageList.jsx')
   , ScreenshotModal = require('./components/ScreenshotModal.jsx')
   ;
@@ -10,36 +9,81 @@ module.exports = React.createClass({
 
     getInitialState: function(props) {
         props = this.props || props;
+        var screenshots = props.screenshots || [];
+        this.calculateIndexes(screenshots);
 
         return {
-            screenshots: props.screenshots || [],
+            screenshots: screenshots,
             modalOpen: false,
-            activeScreenshot: null,
-            mapUrl: null
+            activeScreenshot: {}
         };
     },
 
     render: function() {
-
-        var scripts = ['/js/app.js'];
-
         return (
-            <Layout title="Screenshots"> scripts={scripts}>
-                <ImageList images={this.state.screenshots} onImageClick={this.onImageClick} />
-                <ScreenshotModal hidden={!this.state.modalOpen} />
-            </Layout>
+            <div id="screenshots">
+                <ImageList images={this.state.screenshots} onImageClick={this.showImage} />
+                <ScreenshotModal hidden={!this.state.modalOpen} image={this.state.activeScreenshot.url} handleClick={this.hideImage} />
+            </div>
         );
     },
 
-    onImageClick: function() {
-        console.log('is this working?');
-        console.log('the object at hand: ', this);
+    showImage: function(image) {
+        this.setState({
+            modalOpen: true,
+            activeScreenshot: image
+        })
+    },
+
+    hideImage: function() {
+        this.setState({
+            modalOpen: false
+        });
     },
 
     addScreenshot: function(screenshot) {
         var screenshots = this.state.screenshots;
         screenshots.unshift(screenshots);
+        this.calculateIndexes(screenshots);
         this.setState({ screenshots: screenshots });
+    },
+
+    handleKeypress: function(e) {
+        console.log(e);
+
+        if (!this.state.modalOpen) return;
+
+        var screenshots = this.state.screenshots
+          , index = this.state.activeScreenshot.index
+          ;
+
+        // left
+        if (e.keyCode === 37) {
+            console.log('left');
+            --index;
+            if (index < 0) {
+                index = screenshots.length - 1;
+            }
+        // right
+        } else if (e.keyCode === 39) {
+            console.log('right');
+            ++index;
+            if (index >= screenshots.length) {
+                index = 0;
+            }
+        }
+
+        this.setState({
+            activeScreenshot: screenshots[index]
+        });
+    },
+
+    calculateIndexes: function(screenshots) {
+        var i = 0;
+        screenshots.forEach(function(screenshot) {
+            screenshot.index = i;
+            ++i;
+        });
     },
 
     componentWillReceiveProps: function(newProps, oldProps){
@@ -49,12 +93,24 @@ module.exports = React.createClass({
     componentDidMount: function() {
         var self = this;
 
+        window.addEventListener('keydown', this.handleKeypress, true);
+
         // This feels like a hack, but I couldn't get it to work with just /screenshots
         var host = window.document.location.href.replace(/\/$/, '');
-        var socket = io.connect(host);
+        this.socket = io.connect(host);
 
         socket.on('screenshot', function(screenshot) {
             self.addScreenshot(screenshot);
         });
+    },
+
+    componentWillUnmount: function() {
+        // turn off the socket
+        if (this.socket) {
+            this.socket.disconnect();
+        }
+
+        window.removeEventListener('keydown', this.handleKeypress);
     }
+
 });
